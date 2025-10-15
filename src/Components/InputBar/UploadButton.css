@@ -20,6 +20,8 @@
   color: #007bff;
   border-color: #0099e5;
 }
-.upload-icon {
+.upload-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
   pointer-events: none;
 }

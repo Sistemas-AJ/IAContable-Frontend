@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
 import './MicButton.css';
 
-const MicButton = ({ onTranscript }) => {
+const MicButton = ({ onTranscript, disabled = false }) => {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
   const startListening = () => {
+    if (disabled) return;
+    
     if (!('webkitSpeechRecognition' in window)) {
       alert('La API de reconocimiento de voz no está soportada en este navegador.');
       return;
@@ -38,10 +40,11 @@ const MicButton = ({ onTranscript }) => {
 
   return (
     <button
-      className={`mic-btn ${listening ? 'active' : ''}`}
+      className={`mic-btn ${listening ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
       onClick={listening ? stopListening : startListening}
       title={listening ? 'Detener micrófono' : 'Hablar por micrófono'}
       type="button"
+      disabled={disabled}
     >
       {listening ? <FaMicrophoneSlash /> : <FaMicrophone />}
     </button>
