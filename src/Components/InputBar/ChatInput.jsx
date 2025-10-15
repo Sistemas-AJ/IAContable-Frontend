@@ -124,8 +124,12 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
           {selectedFiles.map((file, idx) => (
             <div className="file-preview-item" key={idx}>
               {fileIcon(file)}
-              <span className="file-preview-name" title={file.name}>{file.name.length > 25 ? file.name.slice(0,22) + '...' : file.name}</span>
-              <span className="file-preview-type">{file.type.split('/')[1]?.toUpperCase() || 'ARCHIVO'}</span>
+              <span className="file-preview-name" title={file.name}>
+                {file.name}
+              </span>
+              <span className="file-preview-type">
+                {file.name.split('.').pop()?.toUpperCase() || 'ARCHIVO'}
+              </span>
               <button className="file-remove-btn" onClick={() => handleRemoveFile(idx)} title="Eliminar archivo">✖</button>
             </div>
           ))}
