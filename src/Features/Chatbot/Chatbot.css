@@ -1,0 +1,39 @@
+.chat-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    /* Fondo neutro y profesional para el contenedor principal */
+    background-color: #f8f9fa; 
+    color: #212529; /* Un color de texto oscuro casi negro para legibilidad */
+    font-family: 'Google Sans', sans-serif, Arial;
+    overflow: hidden;
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Empuja el input hacia abajo */
+    align-items: center;
+    padding: 2.5rem;
+    height: 100%;
+    box-sizing: border-box; /* Asegura que el padding no afecte el tamaño total */
+}
+
+.welcome-message {
+    text-align: center;
+    margin: auto; /* Centra el mensaje vertical y horizontalmente */
+}
+
+.welcome-message h1 {
+    font-size: 3rem; /* Tamaño de fuente ligeramente reducido para elegancia */
+    font-weight: 500;
+    color: #343a40; /* Color de texto principal oscuro */
+    margin-bottom: 0.5rem; /* Espacio entre el título y el subtítulo */
+}
+
+.welcome-message p {
+    font-size: 1.1rem;
+    color: #6c757d; /* Color de texto secundario (gris) */
+    font-weight: 400;
+}

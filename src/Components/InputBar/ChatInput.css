@@ -1,0 +1,52 @@
+.chat-input-area {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 50px;
+    border: 2px solid #7fd7e7;
+    padding: 5px 20px;
+    margin: 0 auto 18px auto;
+    box-shadow: 0 2px 8px rgba(30,127,174,0.07);
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    border: none;
+    background-color: transparent;
+    color: #1c1e21;
+    font-size: 16px;
+    padding: 15px 0;
+    outline: none;
+}
+
+.chat-input-area input::placeholder {
+    color: #b0b0b0;
+    opacity: 1;
+}
+.mic-btn {
+    margin-right: 4px;
+}
+
+
+.send-button {
+    background: linear-gradient(90deg, #7fd7e7 0%, #0099e5 100%);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(30,127,174,0.10);
+    transition: background 0.2s;
+}
+.send-button:hover {
+    background: linear-gradient(90deg, #0099e5 0%, #007bff 100%);
+}
+
+.send-button svg {
+    fill: #fff;
+}

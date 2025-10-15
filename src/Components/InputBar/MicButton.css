@@ -1,0 +1,23 @@
+.mic-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  font-size: 1.3rem;
+  margin-left: 8px;
+}
+.mic-btn.active {
+  background: #e74c3c;
+  border: 1px solid #e74c3c;
+  color: #fff;
+}
+.mic-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #e74c3c33;
+}

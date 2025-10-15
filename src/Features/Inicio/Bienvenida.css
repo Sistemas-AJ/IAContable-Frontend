@@ -1,0 +1,36 @@
+.welcome-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: url('../../assets/fondo.jpg') no-repeat center center fixed;
+  background-size: cover;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  text-align: center;
+}
+
+.welcome-content {
+  background: rgba(255, 255, 255, 0.548); /* Blanco semitransparente */
+  backdrop-filter: blur(8px); /* Desenfoque elegante */
+  -webkit-backdrop-filter: blur(8px);
+  padding: 50px 60px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
+  max-width: 600px;
+  width: 90%;
+}
+
+.welcome-title {
+  font-size: 2.5rem;
+  color: #1c1e21;
+  margin-bottom: 15px;
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem;
+  color: #606770;
+  margin-bottom: 30px;
+}
+
+/* El botón ahora se importa desde Components/Button.css para un diseño profesional */
