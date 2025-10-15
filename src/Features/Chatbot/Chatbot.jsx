@@ -6,24 +6,6 @@ import './Chatbot.css';
 
 const Chatbot = () => {
   const [input, setInput] = useState('');
-<<<<<<< HEAD
-  const [messages, setMessages] = useState([]); // Historial de mensajes
-
-  // Enviar mensaje y agregarlo al historial
-  const handleSend = () => {
-    if (input.trim() === '') return;
-    setMessages(prev => [...prev, { from: 'user', text: input }]);
-    setInput('');
-    // Aquí podrías hacer la llamada a la IA y luego agregar la respuesta al historial
-    // setMessages(prev => [...prev, { from: 'bot', text: 'Respuesta de ejemplo' }]);
-  };
-
-  // Manejar archivo subido (puedes expandir esto según tu lógica)
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      console.log('Archivo seleccionado:', file);
-=======
   const [messages, setMessages] = useState([]);
 
   // Función para enviar mensaje al backend
@@ -82,7 +64,6 @@ const Chatbot = () => {
         const errorMessage = { text: 'Error al subir el archivo.', isUser: false };
         setMessages(prev => [...prev, errorMessage]);
       }
->>>>>>> 4c9807cad32cc1f706ee419666d8b361a8d1ec39
     }
   };
 
@@ -92,27 +73,14 @@ const Chatbot = () => {
       <main className="main-content">
         {messages.length === 0 ? (
           <div className="welcome-message">
-<<<<<<< HEAD
-            <h1>Hola, </h1>
-=======
             <h1>Hola,</h1>
->>>>>>> 4c9807cad32cc1f706ee419666d8b361a8d1ec39
             <p>¿Cómo puedo ayudarte hoy?</p>
           </div>
         ) : (
           <div className="chat-messages">
-<<<<<<< HEAD
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`chat-message-row ${msg.from === 'user' ? 'user' : 'bot'}`}
-              >
-                <div className={`chat-bubble ${msg.from === 'user' ? 'user' : 'bot'}`}>{msg.text}</div>
-=======
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.isUser ? 'user' : 'bot'}`}>
                 {msg.text}
->>>>>>> 4c9807cad32cc1f706ee419666d8b361a8d1ec39
               </div>
             ))}
           </div>
