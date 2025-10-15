@@ -42,10 +42,19 @@ const ChatInput = ({ value, onChange, onSend, onFileChange }) => {
     onChange({ target: { value: transcript } });
   };
 
-  // Permitir múltiples archivos y guardar en el estado
+  // Permitir múltiples archivos y acumularlos en el estado
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    setSelectedFiles(files);
+    setSelectedFiles(prevFiles => {
+      // Evitar duplicados por nombre y tamaño
+      const allFiles = [...prevFiles];
+      files.forEach(newFile => {
+        if (!allFiles.some(f => f.name === newFile.name && f.size === newFile.size)) {
+          allFiles.push(newFile);
+        }
+      });
+      return allFiles;
+    });
     if (onFileChange) {
       onFileChange(e);
     }

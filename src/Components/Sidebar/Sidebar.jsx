@@ -3,6 +3,7 @@ import './Sidebar.css';
 import ToolsDropdown from '../InputBar/ToolsDropdown';
 import logo from '../../assets/logo.png';
 
+
 const Sidebar = () => (
   <aside className="sidebar">
     <div className="sidebar-header">
