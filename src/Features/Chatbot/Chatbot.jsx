@@ -1,25 +1,93 @@
 
 import React, { useState } from 'react';
+import { BlockMath, InlineMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 import Sidebar from '../../Components/Sidebar/Sidebar';
 import ChatInput from '../../Components/InputBar/ChatInput';
 import './Chatbot.css';
+
 
 const Chatbot = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [clearFiles, setClearFiles] = useState(null);
+  const clearFilesRef = React.useRef(null);
+  const setClearFiles = (fn) => {
+    clearFilesRef.current = fn;
+  };
   const [selectedTool, setSelectedTool] = useState(null);
   // Quitar herramienta seleccionada
   const handleRemoveTool = () => setSelectedTool(null);
-  // Función para agregar mensaje manteniendo solo los últimos 10
-  const addMessage = (message) => {
-    setMessages(prev => {
-      const newMessages = [...prev, message];
-      // Mantener solo los últimos 10 mensajes
-      return newMessages.length > 10 ? newMessages.slice(-10) : newMessages;
-    });
-  };
+
+    // Función para agregar mensaje manteniendo solo los últimos 10
+    const addMessage = (message) => {
+      setMessages(prev => {
+        const newMessages = [...prev, message];
+        // Mantener solo los últimos 10 mensajes
+        return newMessages.length > 10 ? newMessages.slice(-10) : newMessages;
+      });
+    };
+
+    // Función para formatear el mensaje del bot respetando saltos de línea y renderizando fórmulas
+    function formatBotMessage(text) {
+      if (!text) return null;
+      // Eliminar todos los asteriscos '*' (Markdown bold/italic) y símbolos '#'
+      const cleanText = text.replace(/\*/g, '').replace(/\#/g, '');
+      // Si el texto contiene bloques LaTeX ($$...$$), los renderiza como BlockMath
+      // Si contiene inline ($...$), los renderiza como InlineMath
+      // El resto lo muestra con saltos de línea
+      const blockRegex = /\$\$(.+?)\$\$/gs;
+      const inlineRegex = /\$(.+?)\$/g;
+      let elements = [];
+      let lastIndex = 0;
+      let match;
+      let key = 0;
+
+      // Procesar bloques $$...$$
+      while ((match = blockRegex.exec(cleanText)) !== null) {
+        if (match.index > lastIndex) {
+          // Procesar el texto antes del bloque
+          const before = cleanText.slice(lastIndex, match.index);
+          elements.push(...before.split('\n').map((line, idx, arr) => (
+            <React.Fragment key={key++}>
+              {line}
+              {idx !== arr.length - 1 && <br />}
+            </React.Fragment>
+          )));
+        }
+        elements.push(<BlockMath key={key++}>{match[1]}</BlockMath>);
+        lastIndex = match.index + match[0].length;
+      }
+      if (lastIndex < cleanText.length) {
+        // Procesar el texto restante (puede contener $...$ inline)
+        const rest = cleanText.slice(lastIndex);
+        let lastInline = 0;
+        let inlineMatch;
+        while ((inlineMatch = inlineRegex.exec(rest)) !== null) {
+          if (inlineMatch.index > lastInline) {
+            const before = rest.slice(lastInline, inlineMatch.index);
+            elements.push(...before.split('\n').map((line, idx, arr) => (
+              <React.Fragment key={key++}>
+                {line}
+                {idx !== arr.length - 1 && <br />}
+              </React.Fragment>
+            )));
+          }
+          elements.push(<InlineMath key={key++}>{inlineMatch[1]}</InlineMath>);
+          lastInline = inlineMatch.index + inlineMatch[0].length;
+        }
+        if (lastInline < rest.length) {
+          const after = rest.slice(lastInline);
+          elements.push(...after.split('\n').map((line, idx, arr) => (
+            <React.Fragment key={key++}>
+              {line}
+              {idx !== arr.length - 1 && <br />}
+            </React.Fragment>
+          )));
+        }
+      }
+      return elements;
+    }
 
   // Función para enviar mensaje al backend
   const handleSend = async () => {
@@ -149,8 +217,8 @@ const Chatbot = () => {
       } finally {
         setIsLoading(false);
         // Limpiar los archivos de la barra de entrada después del procesamiento
-        if (clearFiles) {
-          clearFiles();
+        if (clearFilesRef.current) {
+          clearFilesRef.current();
         }
       }
     }
@@ -183,7 +251,9 @@ const Chatbot = () => {
                     {msg.text}
                   </div>
                 ) : (
-                  msg.text
+                  msg.isUser
+                    ? msg.text
+                    : formatBotMessage(msg.text)
                 )}
               </div>
             ))}
