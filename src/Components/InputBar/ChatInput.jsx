@@ -139,7 +139,7 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
         <UploadButton onFileChange={handleFileChange} disabled={disabled} />
         <textarea
           className="chat-textarea"
-          placeholder="Escribe un mensaje..."
+          placeholder={selectedTool ? `Sube un archivo Excel para ${selectedTool.toLowerCase()}...` : "Escribe un mensaje..."}
           value={value}
           onChange={onChange}
           rows={1}

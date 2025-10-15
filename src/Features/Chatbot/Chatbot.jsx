@@ -87,7 +87,7 @@ const Chatbot = () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('http://127.0.0.1:9000/upload-document', {
+        const response = await fetch('http://127.0.0.1:9000/upload', {
           method: 'POST',
           body: formData,
         });
@@ -101,9 +101,42 @@ const Chatbot = () => {
         // Reemplazar mensaje de carga con mensaje de éxito
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMessage.id
-            ? { ...msg, text: `✅ Archivo "${data.filename}" procesado exitosamente. Ahora puedes preguntarme sobre su contenido.`, isLoading: false }
+            ? { ...msg, text: `✅ Archivo "${data.filename}" procesado exitosamente. ${selectedTool === 'Ratios financieros' ? '📊 Calculando ratios financieros...' : 'Ahora puedes preguntarme sobre su contenido.'}`, isLoading: false }
             : msg
         ));
+
+        // Si se seleccionó "Ratios financieros" y es un archivo Excel, calcular automáticamente los ratios
+        if (selectedTool === 'Ratios financieros' && (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls'))) {
+          // Calcular ratios automáticamente sin mostrar mensaje del usuario
+          setIsLoading(true);
+          
+          try {
+            const ratiosResponse = await fetch('http://127.0.0.1:9000/chat', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ message: 'dame los ratios' }),
+            });
+
+            if (!ratiosResponse.ok) {
+              throw new Error('Error al calcular ratios');
+            }
+
+            const ratiosData = await ratiosResponse.json();
+            const ratiosBotMessage = { text: ratiosData.response, isUser: false, id: Date.now() + 2 };
+            addMessage(ratiosBotMessage);
+            
+            // Limpiar la herramienta seleccionada después de usarla
+            setSelectedTool(null);
+          } catch (error) {
+            console.error('Error al calcular ratios:', error);
+            const errorMessage = { text: 'Lo siento, hubo un error al calcular los ratios.', isUser: false, id: Date.now() + 2 };
+            addMessage(errorMessage);
+          } finally {
+            setIsLoading(false);
+          }
+        }
 
       } catch (error) {
         console.error('Error al subir archivo:', error);
