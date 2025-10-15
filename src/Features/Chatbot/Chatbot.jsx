@@ -28,7 +28,7 @@ const Chatbot = () => {
       <main className="main-content">
         {/* El contenedor del mensaje ahora tiene título y subtítulo para una mejor bienvenida */}
         <div className="welcome-message">
-          <h1>Hola, ajsistemas</h1>
+          <h1>Hola, </h1>
           <p>¿Cómo puedo ayudarte hoy?</p>
         </div>
         <ChatInput

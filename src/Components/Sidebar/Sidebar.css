@@ -1,8 +1,16 @@
+.sidebar-logo {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    margin-right: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(30,127,174,0.13);
+}
 .sidebar {
     width: 300px;
     flex-shrink: 0;
     background: linear-gradient(160deg, #0099e5 0%, #7fd7e7 100%);
-    padding: 50px 30px 30px 30px;
+    padding: 40px 30px 20px 30px;
     display: flex;
     flex-direction: column;
     border-right: none;
@@ -13,7 +21,7 @@
 .sidebar-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin-bottom: 15px;
     padding: 0px 25px;
 }
@@ -24,27 +32,6 @@
     color: #fff;
     letter-spacing: 0.5px;
     text-shadow: 0 2px 8px rgba(30,127,174,0.10);
-}
-
-.sidebar-menu-icon {
-    cursor: pointer;
-    color: #e0f7fa;
-    font-size: 24px;
-}
-
-.new-chat-button {
-    background: linear-gradient(90deg, #007bff 0%, #0099e5 100%);
-    border: none;
-    color: #fff;
-    font-weight: 600;
-    padding: 15px 2px;
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: center;
-    margin-bottom: 20px;
-    transition: background 0.2s;
-    width: 100%;
-    box-shadow: 0 2px 8px rgba(30,127,174,0.10);
 }
 
 .new-chat-button:hover {

@@ -1,13 +1,17 @@
 import React from 'react';
 import './Sidebar.css';
+import ToolsDropdown from '../InputBar/ToolsDropdown';
+import logo from '../../assets/logo.png';
 
 const Sidebar = () => (
   <aside className="sidebar">
     <div className="sidebar-header">
+      <img src={logo} alt="Logo IA Contable" className="sidebar-logo" />
       <span className="gemini-logo">IA Contable</span>
-      <span className="sidebar-menu-icon">☰</span>
     </div>
-    <div className="new-chat-button">+ Nuevo chat</div>
+    <div className="sidebar-tools">
+      <ToolsDropdown />
+    </div>
   </aside>
 );
 
