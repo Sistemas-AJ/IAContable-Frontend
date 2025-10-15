@@ -34,7 +34,7 @@ const fileIcon = (file) => {
   }
 };
 
-const ChatInput = ({ value, onChange, onSend, onFileChange }) => {
+const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, onClearFiles }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
 
   // Función para actualizar el input con la transcripción
@@ -65,6 +65,18 @@ const ChatInput = ({ value, onChange, onSend, onFileChange }) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Limpiar todos los archivos seleccionados
+  const clearFiles = () => {
+    setSelectedFiles([]);
+  };
+
+  // Exponer la función clearFiles al componente padre si se proporciona onClearFiles
+  React.useEffect(() => {
+    if (onClearFiles) {
+      onClearFiles(clearFiles);
+    }
+  }, [onClearFiles]);
+
   return (
     <div className="chat-input-area">
       {/* Vista previa de archivos */}
@@ -81,19 +93,20 @@ const ChatInput = ({ value, onChange, onSend, onFileChange }) => {
         </div>
       )}
       <div className="chat-input-row">
-        <UploadButton onFileChange={handleFileChange} />
+        <UploadButton onFileChange={handleFileChange} disabled={disabled} />
         <textarea
           className="chat-textarea"
           placeholder="Escribe un mensaje..."
           value={value}
           onChange={onChange}
           rows={1}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && onSend()}
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && !disabled && onSend()}
           style={{ resize: 'none' }}
+          disabled={disabled}
         />
         <div className="chat-input-buttons">
-          <MicButton onTranscript={handleTranscript} />
-          <button className="send-button" aria-label="Enviar mensaje" onClick={onSend}>
+          <MicButton onTranscript={handleTranscript} disabled={disabled} />
+          <button className="send-button" aria-label="Enviar mensaje" onClick={onSend} disabled={disabled}>
             <svg width="24" height="24" viewBox="0 0 24 24">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
             </svg>

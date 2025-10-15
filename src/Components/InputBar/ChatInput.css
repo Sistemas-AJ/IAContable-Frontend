@@ -112,9 +112,9 @@
     box-sizing: border-box;
 }
 
-.chat-textarea::placeholder {
-    color: #b0b0b0;
-    opacity: 1;
+.chat-textarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .chat-input-buttons {
@@ -147,6 +147,8 @@
     background: linear-gradient(90deg, #0099e5 0%, #007bff 100%);
 }
 
-.send-button svg {
-    fill: #fff;
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
