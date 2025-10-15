@@ -24,11 +24,15 @@
 }
 .file-preview-list {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 8px;
     max-height: 120px;
     overflow-y: auto;
+    width: 100%;
+    min-width: 220px;
+    align-items: flex-start;
 }
 
 .file-preview-item {
@@ -40,7 +44,8 @@
     padding: 4px 10px 4px 8px;
     font-size: 15px;
     gap: 8px;
-    max-width: 95%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .file-preview-name {
