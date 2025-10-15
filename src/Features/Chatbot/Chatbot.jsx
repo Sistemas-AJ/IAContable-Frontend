@@ -9,6 +9,9 @@ const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [clearFiles, setClearFiles] = useState(null);
+  const [selectedTool, setSelectedTool] = useState(null);
+  // Quitar herramienta seleccionada
+  const handleRemoveTool = () => setSelectedTool(null);
   // Función para agregar mensaje manteniendo solo los últimos 10
   const addMessage = (message) => {
     setMessages(prev => {
@@ -52,10 +55,15 @@ const Chatbot = () => {
     }
   };
 
-  // Manejar archivo subido
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  // Ya no subimos archivos automáticamente al seleccionar
+  const handleFileChange = (e) => {
+    // Solo actualiza el input, no sube archivos
+  };
+
+  // Subir archivos solo cuando se presiona enviar
+  const handleSendFiles = async (files, text) => {
+    if (!files || files.length === 0) return;
+    for (const file of files) {
       // Mostrar mensaje del usuario con el archivo
       const fileMessage = {
         text: `Archivo subido: ${file.name}`,
@@ -113,11 +121,15 @@ const Chatbot = () => {
         }
       }
     }
+    // Si hay texto, también envíalo como mensaje
+    if (text && text.trim() !== '') {
+      await handleSend();
+    }
   };
 
   return (
     <div className="chat-container">
-      <Sidebar />
+      <Sidebar onToolSelect={setSelectedTool} />
       <main className="main-content">
         {messages.length === 0 ? (
           <div className="welcome-message">
@@ -161,8 +173,11 @@ const Chatbot = () => {
           onChange={e => setInput(e.target.value)}
           onSend={handleSend}
           onFileChange={handleFileChange}
+          onSendFiles={handleSendFiles}
           onClearFiles={setClearFiles}
           disabled={isLoading}
+          selectedTool={selectedTool}
+          onRemoveTool={handleRemoveTool}
         />
       </main>
     </div>

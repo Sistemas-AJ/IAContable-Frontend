@@ -4,19 +4,19 @@ import './ToolsDropdown.css';
 
 const TOOLS = [
   {
-    label: 'Análisis financiero',
+    label: 'Ratios financieros',
     icon: (
       <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 17V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10" stroke="#0099e5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 13l2.5 2.5L16 10" stroke="#0099e5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     ),
   },
   {
-    label: 'Consultas contables',
+    label: 'Análisis vertical',
     icon: (
       <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="#0099e5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     ),
   },
   {
-    label: 'Documentos',
+    label: 'Análisis horizontal',
     icon: (
       <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#0099e5" strokeWidth="1.5"/><path d="M8 8h8M8 12h8M8 16h4" stroke="#0099e5" strokeWidth="1.5" strokeLinecap="round"/></svg>
     ),

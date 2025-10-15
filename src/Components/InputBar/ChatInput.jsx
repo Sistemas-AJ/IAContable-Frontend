@@ -34,7 +34,9 @@ const fileIcon = (file) => {
   }
 };
 
-const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, onClearFiles }) => {
+// Ahora acepta una prop onSendFiles para subir archivos
+// Ahora recibe selectedTool y onRemoveTool por props
+const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, onClearFiles, onSendFiles, selectedTool, onRemoveTool }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
 
   // Función para actualizar el input con la transcripción
@@ -59,6 +61,16 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
       onFileChange(e);
     }
   };
+  // Manejar el envío de archivos y mensaje
+  const handleSend = () => {
+    if (selectedFiles.length > 0 && onSendFiles) {
+      const filesToSend = [...selectedFiles];
+      setSelectedFiles([]); // Limpiar archivos inmediatamente al enviar
+      onSendFiles(filesToSend, value); // Enviar archivos y texto
+    } else if (onSend) {
+      onSend();
+    }
+  };
 
   // Eliminar archivo de la lista
   const handleRemoveFile = (index) => {
@@ -79,6 +91,33 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
 
   return (
     <div className="chat-input-area">
+      {/* Herramienta seleccionada (solo mostrar, no seleccionar aquí) */}
+      {selectedTool && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: 8,
+          background: '#e6f7fa',
+          borderRadius: 16,
+          padding: '4px 12px',
+          width: 'fit-content',
+          fontWeight: 500,
+          fontSize: 15
+        }}>
+          <span>{selectedTool}</span>
+          {onRemoveTool && (
+            <button onClick={onRemoveTool} style={{
+              marginLeft: 8,
+              background: 'none',
+              border: 'none',
+              color: '#0099e5',
+              fontSize: 18,
+              cursor: 'pointer',
+              lineHeight: 1
+            }} title="Quitar herramienta">×</button>
+          )}
+        </div>
+      )}
       {/* Vista previa de archivos */}
       {selectedFiles.length > 0 && (
         <div className="file-preview-list">
@@ -100,13 +139,13 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
           value={value}
           onChange={onChange}
           rows={1}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && !disabled && onSend()}
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && !disabled && handleSend()}
           style={{ resize: 'none' }}
           disabled={disabled}
         />
         <div className="chat-input-buttons">
           <MicButton onTranscript={handleTranscript} disabled={disabled} />
-          <button className="send-button" aria-label="Enviar mensaje" onClick={onSend} disabled={disabled}>
+          <button className="send-button" aria-label="Enviar mensaje" onClick={handleSend} disabled={disabled}>
             <svg width="24" height="24" viewBox="0 0 24 24">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
             </svg>
