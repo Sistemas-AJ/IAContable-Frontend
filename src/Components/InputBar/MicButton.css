@@ -1,24 +1,39 @@
+/**
+ * MicButton.css (Refactorizado para un look profesional)
+ * Estilo: Botón terciario (tipo "ghost") para no competir visualmente.
+ */
+
 .mic-btn {
-  background: #fff;
-  border: 1px solid #ccc;
+  background: transparent;
+  border: 1px solid #D0D9E6;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  color: #5A6A85;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s, border 0.2s;
+  transition: all 0.2s ease;
   font-size: 1.3rem;
-  margin-left: 8px;
 }
+
+.mic-btn:hover {
+  border-color: #007BFF;
+  color: #007BFF;
+  background-color: #F0F7FF;
+}
+
 .mic-btn.active {
-  background: #e74c3c;
-  border: 1px solid #e74c3c;
+  background: #DC3545;
+  border-color: #DC3545;
   color: #fff;
 }
+
 .mic-btn.disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
   pointer-events: none;
+  background: transparent;
+  border-color: #D0D9E6;
 }

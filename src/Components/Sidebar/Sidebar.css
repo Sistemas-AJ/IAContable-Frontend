@@ -1,39 +1,113 @@
-.sidebar-logo {
-    width: 54px;
-    height: 54px;
-    object-fit: contain;
-    margin-right: 16px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(30,127,174,0.13);
-}
+
+
 .sidebar {
-    width: 300px;
+    width: 270px;
+    min-width: 220px;
     flex-shrink: 0;
-    background: linear-gradient(160deg, #0099e5 0%, #7fd7e7 100%);
-    padding: 40px 30px 20px 30px;
+    background: #3A3F4B;
+    padding: 32px 18px 24px 18px;
     display: flex;
     flex-direction: column;
-    border-right: none;
     box-sizing: border-box;
-    box-shadow: 2px 0 12px 0 rgba(30,127,174,0.08);
+    border-right: 1px solid #23272F;
+    box-shadow: 4px 0 32px -12px rgba(0,0,0,0.18);
+    z-index: 10;
+    transition: all 0.3s ease-in-out;
 }
+
 
 .sidebar-header {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    margin-bottom: 15px;
-    padding: 0px 25px;
+    margin-bottom: 36px;
+    padding: 0 4px;
 }
+
+
+.sidebar-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    margin-right: 16px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.22);
+    background: #3A3F4B;
+    border: 2px solid #2A3B53;
+}
+
 
 .gemini-logo {
-    font-size: 22px;
+    font-size: 1.7rem;
     font-weight: 700;
-    color: #fff;
-    letter-spacing: 0.5px;
-    text-shadow: 0 2px 8px rgba(30,127,174,0.10);
+    color: #F8F9FA;
+    letter-spacing: 0.03em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 
-.new-chat-button:hover {
-    background: linear-gradient(90deg, #0056b3 0%, #007bff 100%);
+
+.sidebar-tools {
+    margin-top: 18px;
+    padding: 0 2px;
+}
+
+/* Separador visual para las secciones */
+.sidebar-tools::before {
+    content: "";
+    display: block;
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(90deg, #707b91 0%, #3A3F4B 100%);
+    margin-bottom: 18px;
+    opacity: 0.18;
+}
+
+
+/* Sección de usuario en la parte inferior */
+.sidebar-user {
+    margin-top: auto;
+    padding: 18px 4px 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid #2A3B53;
+    background: #3A3F4B;
+}
+.sidebar-user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.18);
+    border: 2px solid #2A3B53;
+}
+.sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.sidebar-user-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #F8F9FA;
+    letter-spacing: 0.01em;
+}
+.sidebar-user-email {
+    font-size: 0.92rem;
+    color: #8A9BB3;
+    opacity: 0.85;
+}
+
+/* --- Mejorar scroll y responsividad --- */
+@media (max-width: 900px) {
+    .sidebar {
+        width: 100vw;
+        min-width: 0;
+        border-right: none;
+        box-shadow: none;
+        padding: 18px 6px 12px 6px;
+    }
+    .sidebar-header {
+        margin-bottom: 18px;
+    }
 }

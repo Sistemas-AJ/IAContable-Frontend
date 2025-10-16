@@ -2,15 +2,21 @@
 
 
 import React, { useState } from 'react';
+
 import UploadButton from './UploadButton';
 import MicButton from './MicButton';
 import './ChatInput.css';
 import './MicButton.css';
 
+import excelIcon from '../../assets/excel.png';
+import wordIcon from '../../assets/word.png';
+
 
 
 
 const fileIcon = (file) => {
+  // Detectar por extensión para Excel y Word
+  const ext = file.name.split('.').pop()?.toLowerCase();
   if (file.type.startsWith('image/')) {
     return (
       <span role="img" aria-label="Imagen" style={{fontSize: '1.3em'}}>🖼️</span>
@@ -18,6 +24,14 @@ const fileIcon = (file) => {
   } else if (file.type === 'application/pdf') {
     return (
       <span role="img" aria-label="PDF" style={{fontSize: '1.3em', color: '#e74c3c'}}>📄</span>
+    );
+  } else if (ext === 'xlsx' || ext === 'xls') {
+    return (
+      <img src={excelIcon} alt="Excel" style={{width: 28, height: 28, verticalAlign: 'middle'}} />
+    );
+  } else if (ext === 'docx' || ext === 'doc') {
+    return (
+      <img src={wordIcon} alt="Word" style={{width: 28, height: 28, verticalAlign: 'middle'}} />
     );
   } else if (file.type.startsWith('video/')) {
     return (
@@ -38,6 +52,8 @@ const fileIcon = (file) => {
 // Ahora recibe selectedTool y onRemoveTool por props
 const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, onClearFiles, onSendFiles, selectedTool, onRemoveTool }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [fileResetKey, setFileResetKey] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
 
   // Función para actualizar el input con la transcripción
   const handleTranscript = (transcript) => {
@@ -45,8 +61,7 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
   };
 
   // Permitir múltiples archivos y acumularlos en el estado
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
+  const addFiles = (files) => {
     setSelectedFiles(prevFiles => {
       // Evitar duplicados por nombre y tamaño
       const allFiles = [...prevFiles];
@@ -57,8 +72,35 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
       });
       return allFiles;
     });
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    addFiles(files);
     if (onFileChange) {
       onFileChange(e);
+    }
+  };
+
+  // Drag & Drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!disabled) setDragActive(true);
+  };
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (disabled) return;
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      addFiles(files);
     }
   };
   // Manejar el envío de archivos y mensaje
@@ -66,6 +108,7 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
     if (selectedFiles.length > 0 && onSendFiles) {
       const filesToSend = [...selectedFiles];
       setSelectedFiles([]); // Limpiar archivos inmediatamente al enviar
+      setFileResetKey(prev => prev + 1); // Forzar reset del input file
       onSendFiles(filesToSend, value); // Enviar archivos y texto
     } else if (onSend) {
       onSend();
@@ -90,7 +133,12 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
   }, [onClearFiles]);
 
   return (
-    <div className="chat-input-area">
+    <div
+      className={`chat-input-area${dragActive ? ' drag-active' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Herramienta seleccionada (solo mostrar, no seleccionar aquí) */}
       {selectedTool && (
         <div style={{
@@ -136,7 +184,7 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
         </div>
       )}
       <div className="chat-input-row">
-        <UploadButton onFileChange={handleFileChange} disabled={disabled} />
+        <UploadButton onFileChange={handleFileChange} disabled={disabled} resetTrigger={fileResetKey} />
         <textarea
           className="chat-textarea"
           placeholder={selectedTool ? `Sube un archivo Excel para ${selectedTool.toLowerCase()}...` : "Escribe un mensaje..."}
@@ -156,6 +204,31 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
           </button>
         </div>
       </div>
+      {/* Overlay visual para drag & drop */}
+      {dragActive && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(127,215,231,0.13)',
+            border: '2px dashed #0099e5',
+            borderRadius: 30,
+            zIndex: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            fontSize: 22,
+            color: '#0099e5',
+            fontWeight: 600
+          }}
+        >
+          Suelta el archivo aquí
+        </div>
+      )}
     </div>
   );
 };

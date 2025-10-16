@@ -1,110 +1,53 @@
-.chat-input-row {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    width: 100%;
-    gap: 8px;
-}
+/**
+ * ChatInput.css (Refactorizado para un look profesional)
+ * Foco: Unificado, limpio y funcional.
+ * Previsualización de archivos: Moderno, estilo "tag".
+ * Botones: Estilo consistente.
+ */
 
-.chat-input-row > .chat-textarea {
-    flex: 1 1 auto;
-}
-
-.chat-input-row > .upload-btn {
-    align-self: flex-end;
-}
-
-.chat-input-buttons {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-bottom: 2px;
-}
-.file-preview-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 8px;
-    max-height: 120px;
-    overflow-y: auto;
-    width: 100%;
-    min-width: 220px;
-    align-items: flex-start;
-}
-
-
-.file-preview-item {
-    display: flex;
-    align-items: center;
-    background: #f5fafd;
-    border: 1px solid #b2ebf2;
-    border-radius: 8px;
-    padding: 4px 10px 4px 8px;
-    font-size: 15px;
-    gap: 8px;
-    width: 270px;
-    min-width: 220px;
-    max-width: 270px;
-    box-sizing: border-box;
-    overflow: hidden;
-    position: relative;
-}
-
-.file-preview-name {
-    flex: 1 1 0%;
-    min-width: 0;
-    margin-left: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-    max-width: 100%;
-}
-.file-remove-btn {
-    background: transparent;
-    border: none;
-    color: #e74c3c;
-    font-size: 1.1em;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.18s, color 0.18s;
-    margin-left: 4px;
-    flex-shrink: 0;
-    flex-grow: 0;
-}
-.file-remove-btn:hover {
-    background: #ffeaea;
-    color: #c0392b;
-}
 .chat-input-area {
     width: 100%;
-    max-width: 700px;
+    max-width: 850px;
     display: flex;
     flex-direction: column;
-    background: #fff;
-    border-radius: 30px;
-    border: 2px solid #7fd7e7;
-    padding: 15px 20px 10px 20px;
+    background: #FFFFFF;
+    border-radius: 24px; /* Bordes más suaves */
+    border: 1px solid #E0E6F1;
+    padding: 12px 12px 12px 20px;
     margin: 0 auto 18px auto;
-    box-shadow: 0 2px 8px rgba(30,127,174,0.07);
+    box-shadow: 0 8px 32px rgba(42, 59, 83, 0.10);
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-input-area:focus-within {
+    border-color: #007BFF;
+    box-shadow: 0 12px 32px rgba(0, 123, 255, 0.18);
+}
+
+.chat-input-area.drag-active {
+    border: 2px dashed #007BFF;
+    box-shadow: 0 4px 20px rgba(0, 123, 255, 0.15);
+}
+
+/* Contenedor para la fila principal (textarea y botones) */
+.chat-input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    min-height: 56px;
 }
 
 .chat-textarea {
+    flex-grow: 1;
     width: 100%;
-    min-height: 40px;
-    max-height: 300px;
+    min-height: 24px;
+    max-height: 250px;
     border: none;
     background-color: transparent;
-    color: #1c1e21;
-    font-size: 16px;
+    color: #2A3B53;
+    font-size: 1rem;
+    line-height: 1.5;
     padding: 10px 0;
     outline: none;
     resize: none;
@@ -112,43 +55,121 @@
     box-sizing: border-box;
 }
 
+.chat-textarea::placeholder {
+    color: #8A9BB3;
+}
+
 .chat-textarea:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
 .chat-input-buttons {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
+    align-items: flex-end;
+    flex-shrink: 0;
     gap: 8px;
-    margin-top: 8px;
-}
-.mic-btn {
-    margin-right: 4px;
+    padding-bottom: 4px; /* Alinea mejor los botones con el textarea */
 }
 
+/* --- Previsualización de Archivos Rediseñada --- */
+.file-preview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #EAEFF7; /* Separador sutil */
+    margin: 0 0 8px 0;
+}
 
+.file-preview-item {
+    display: flex;
+    align-items: center;
+    background: #F0F7FF;
+    border: 1px solid #D0E7FF;
+    border-radius: 16px; /* Forma de píldora */
+    padding: 6px 8px 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #0056b3;
+    gap: 8px;
+    max-width: 250px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.file-preview-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-remove-btn {
+    background: #D0E7FF;
+    border: none;
+    color: #0056b3;
+    font-size: 1rem;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.file-remove-btn:hover {
+    background: #FFDDE0;
+    color: #DC3545;
+}
+
+/* --- Botón de Enviar --- */
 .send-button {
-    background: linear-gradient(90deg, #7fd7e7 0%, #0099e5 100%);
+    background: linear-gradient(135deg, #007BFF 0%, #0056b3 100%);
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    color: white;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(30,127,174,0.10);
-    transition: background 0.2s;
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.25);
+    transition: all 0.2s ease-in-out;
 }
+
 .send-button:hover {
-    background: linear-gradient(90deg, #0099e5 0%, #007bff 100%);
+    box-shadow: 0 8px 24px rgba(0, 123, 255, 0.35);
+    transform: scale(1.08);
 }
 
 .send-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+    transform: scale(1);
+    box-shadow: none;
 }
+
+@media (max-width: 600px) {
+    .chat-input-area {
+        max-width: 98vw;
+        padding: 8px 4px 8px 8px;
+    }
+    .chat-input-row {
+        gap: 6px;
+    .send-button, .upload-btn, .mic-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+    }
+}
+    }
+    .send-button, .upload-btn, .mic-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+    }
