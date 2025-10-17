@@ -1,10 +1,67 @@
-/**
- * ChatInput.css (Refactorizado para un look profesional)
- * Foco: Unificado, limpio y funcional.
- * Previsualización de archivos: Moderno, estilo "tag".
- * Botones: Estilo consistente.
- */
+/* Iconos de archivos */
+.file-icon-image,
+.file-icon-pdf,
+.file-icon-video,
+.file-icon-audio,
+.file-icon-generic {
+    font-size: 1.3em;
+    vertical-align: middle;
+}
+.file-icon-pdf {
+    color: #e74c3c;
+}
+.file-icon-excel {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+}
+.file-icon-word {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+}
 
+/* Tag de herramienta seleccionada */
+.selected-tool-tag {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    background: #e6f7fa;
+    border-radius: 16px;
+    padding: 4px 12px;
+    width: fit-content;
+    font-weight: 500;
+    font-size: 15px;
+}
+.remove-tool-btn {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    color: #0099e5;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+/* Overlay visual para drag & drop */
+.drag-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(127,215,231,0.13);
+    border: 2px dashed #0099e5;
+    border-radius: 30px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    font-size: 22px;
+    color: #0099e5;
+    font-weight: 600;
+}
 .chat-input-area {
     width: 100%;
     max-width: 850px;
@@ -53,6 +110,13 @@
     resize: none;
     overflow-y: auto;
     box-sizing: border-box;
+    /* Oculta la barra de scroll en todos los navegadores */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE y Edge */
+}
+
+.chat-textarea::-webkit-scrollbar {
+    display: none; /* Chrome, Safari y Opera */
 }
 
 .chat-textarea::placeholder {

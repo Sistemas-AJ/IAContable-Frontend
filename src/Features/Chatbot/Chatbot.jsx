@@ -1,10 +1,9 @@
-
 import Sidebar from '../../Components/Sidebar/Sidebar';
 import ChatInput from '../../Components/InputBar/ChatInput';
 import './Chatbot.css';
 import { useState } from 'react';
 import { useChatMessages } from './hooks/useChatMessages';
-import { sendMessageToBackend, uploadFileToBackend } from '../../services/chatService';
+import { sendMessageToBackend, uploadFileToBackend, analyzeFinancialData } from '../../services/chatService';
 import ChatMessages from './components/ChatMessages';
 
 const Chatbot = () => {
@@ -30,9 +29,23 @@ const Chatbot = () => {
     setInput('');
     setIsLoading(true);
     try {
-      const data = await sendMessageToBackend(userMessage.text);
-      const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
-      addMessage(botMessage);
+      // Detectar si la pregunta es de análisis financiero y hay archivo subido
+      const filename = window.lastUploadedFile || null;
+      const tool = selectedTool || null;
+      const isFinancialAnalysis = /ratio|an[aá]lisis|liquidez|financier[ao]/i.test(input) && filename;
+      if (isFinancialAnalysis) {
+        // Leer el archivo subido (Excel) y enviarlo al backend para análisis
+        // Aquí deberías obtener los datos del archivo, pero como frontend no puede leer Excel directamente,
+        // solo mandamos el nombre del archivo y el backend debe saber extraerlo.
+        const data = { filename };
+        const result = await analyzeFinancialData(data);
+        const botMessage = { text: result.data ? JSON.stringify(result.data, null, 2) : result.message, isUser: false, id: Date.now() + 1 };
+        addMessage(botMessage);
+      } else {
+        const data = await sendMessageToBackend(userMessage.text, filename, tool);
+        const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
+        addMessage(botMessage);
+      }
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       const errorMessage = { text: 'Lo siento, hubo un error al procesar tu mensaje.', isUser: false, id: Date.now() + 1 };
@@ -69,24 +82,46 @@ const Chatbot = () => {
       setIsLoading(true);
 
       try {
-        const data = await uploadFileToBackend(file);
+        // Enviar archivo y herramienta seleccionada como metadata
+        const data = await uploadFileToBackend(file, selectedTool);
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMessage.id
-            ? { ...msg, text: `✅ Archivo "${data.filename}" procesado exitosamente. ${selectedTool === 'Ratios financieros' ? '📊 Calculando ratios financieros...' : 'Ahora puedes preguntarme sobre su contenido.'}`, isLoading: false }
+            ? {
+                ...msg,
+                text:
+                  selectedTool
+                    ? `✅ Archivo "${data.filename}" procesado exitosamente. El archivo será evaluado para análisis de ${selectedTool.toLowerCase()}.`
+                    : `✅ Archivo "${data.filename}" procesado exitosamente. Ahora puedes preguntarme sobre su contenido.`,
+                isLoading: false
+              }
             : msg
         ));
 
-        // Si se seleccionó "Ratios financieros" y es un archivo Excel, calcular automáticamente los ratios
-        if (selectedTool === 'Ratios financieros' && (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls'))) {
+        // Guardar el nombre del archivo subido en el estado para usarlo en preguntas posteriores
+        window.lastUploadedFile = data.filename;
+
+        // Si hay herramienta seleccionada y NO hay pregunta, preguntar al usuario qué desea hacer
+        if (selectedTool && (!text || text.trim() === '')) {
+          const askMessage = {
+            text: `¿Qué deseas hacer con el archivo "${data.filename}" usando la herramienta "${selectedTool}"?`,
+            isUser: false,
+            id: Date.now() + 3
+          };
+          addMessage(askMessage);
+        }
+
+        // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con contexto
+        if (selectedTool && text && text.trim() !== '') {
           setIsLoading(true);
           try {
-            const ratiosData = await sendMessageToBackend('dame los ratios');
-            const ratiosBotMessage = { text: ratiosData.response, isUser: false, id: Date.now() + 2 };
-            addMessage(ratiosBotMessage);
+            // Enviar mensaje con filename y tool explícitos
+            const response = await sendMessageToBackend(text.trim(), data.filename, selectedTool);
+            const botMessage = { text: response.response, isUser: false, id: Date.now() + 4 };
+            addMessage(botMessage);
             setSelectedTool(null);
           } catch (error) {
-            console.error('Error al calcular ratios:', error);
-            const errorMessage = { text: 'Lo siento, hubo un error al calcular los ratios.', isUser: false, id: Date.now() + 2 };
+            console.error('Error al procesar la pregunta:', error);
+            const errorMessage = { text: 'Lo siento, hubo un error al procesar tu solicitud.', isUser: false, id: Date.now() + 4 };
             addMessage(errorMessage);
           } finally {
             setIsLoading(false);
@@ -95,7 +130,7 @@ const Chatbot = () => {
 
       } catch (error) {
         console.error('Error al subir archivo:', error);
-        setMessages(prev => prev.map(msg =>
+        setMessages(prev => prev.map( msg =>
           msg.id === loadingMessage.id
             ? { ...msg, text: '❌ Error al procesar el archivo. Inténtalo de nuevo.', isLoading: false }
             : msg

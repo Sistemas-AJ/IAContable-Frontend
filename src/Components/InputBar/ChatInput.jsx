@@ -1,17 +1,11 @@
-
-
-
 import React, { useState } from 'react';
 
 import UploadButton from './UploadButton';
 import MicButton from './MicButton';
 import './ChatInput.css';
 import './MicButton.css';
-
 import excelIcon from '../../assets/excel.png';
 import wordIcon from '../../assets/word.png';
-
-
 
 
 const fileIcon = (file) => {
@@ -19,37 +13,35 @@ const fileIcon = (file) => {
   const ext = file.name.split('.').pop()?.toLowerCase();
   if (file.type.startsWith('image/')) {
     return (
-      <span role="img" aria-label="Imagen" style={{fontSize: '1.3em'}}>🖼️</span>
+  <span role="img" aria-label="Imagen" className="file-icon-image">🖼️</span>
     );
   } else if (file.type === 'application/pdf') {
     return (
-      <span role="img" aria-label="PDF" style={{fontSize: '1.3em', color: '#e74c3c'}}>📄</span>
+  <span role="img" aria-label="PDF" className="file-icon-pdf">📄</span>
     );
   } else if (ext === 'xlsx' || ext === 'xls') {
     return (
-      <img src={excelIcon} alt="Excel" style={{width: 28, height: 28, verticalAlign: 'middle'}} />
+  <img src={excelIcon} alt="Excel" className="file-icon-excel" />
     );
   } else if (ext === 'docx' || ext === 'doc') {
     return (
-      <img src={wordIcon} alt="Word" style={{width: 28, height: 28, verticalAlign: 'middle'}} />
+  <img src={wordIcon} alt="Word" className="file-icon-word" />
     );
   } else if (file.type.startsWith('video/')) {
     return (
-      <span role="img" aria-label="Video" style={{fontSize: '1.3em'}}>🎬</span>
+  <span role="img" aria-label="Video" className="file-icon-video">🎬</span>
     );
   } else if (file.type.startsWith('audio/')) {
     return (
-      <span role="img" aria-label="Audio" style={{fontSize: '1.3em'}}>🎵</span>
+  <span role="img" aria-label="Audio" className="file-icon-audio">🎵</span>
     );
   } else {
     return (
-      <span role="img" aria-label="Archivo" style={{fontSize: '1.3em'}}>📎</span>
+  <span role="img" aria-label="Archivo" className="file-icon-generic">📎</span>
     );
   }
 };
 
-// Ahora acepta una prop onSendFiles para subir archivos
-// Ahora recibe selectedTool y onRemoveTool por props
 const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, onClearFiles, onSendFiles, selectedTool, onRemoveTool }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [fileResetKey, setFileResetKey] = useState(0);
@@ -141,28 +133,10 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
     >
       {/* Herramienta seleccionada (solo mostrar, no seleccionar aquí) */}
       {selectedTool && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: 8,
-          background: '#e6f7fa',
-          borderRadius: 16,
-          padding: '4px 12px',
-          width: 'fit-content',
-          fontWeight: 500,
-          fontSize: 15
-        }}>
+        <div className="selected-tool-tag">
           <span>{selectedTool}</span>
           {onRemoveTool && (
-            <button onClick={onRemoveTool} style={{
-              marginLeft: 8,
-              background: 'none',
-              border: 'none',
-              color: '#0099e5',
-              fontSize: 18,
-              cursor: 'pointer',
-              lineHeight: 1
-            }} title="Quitar herramienta">×</button>
+            <button className="remove-tool-btn" onClick={onRemoveTool} title="Quitar herramienta">×</button>
           )}
         </div>
       )}
@@ -192,7 +166,6 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
           onChange={onChange}
           rows={1}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && !disabled && handleSend()}
-          style={{ resize: 'none' }}
           disabled={disabled}
         />
         <div className="chat-input-buttons">
@@ -206,28 +179,7 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
       </div>
       {/* Overlay visual para drag & drop */}
       {dragActive && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(127,215,231,0.13)',
-            border: '2px dashed #0099e5',
-            borderRadius: 30,
-            zIndex: 20,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
-            fontSize: 22,
-            color: '#0099e5',
-            fontWeight: 600
-          }}
-        >
-          Suelta el archivo aquí
-        </div>
+        <div className="drag-overlay">Suelta el archivo aquí</div>
       )}
     </div>
   );
