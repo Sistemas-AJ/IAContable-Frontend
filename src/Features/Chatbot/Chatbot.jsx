@@ -32,19 +32,20 @@ const Chatbot = () => {
       // Si hay archivo subido y herramienta seleccionada, enviar todo junto
       const filename = window.lastUploadedFile || null;
       const tool = selectedTool || null;
+      const session_id = window.lastSessionId || null;
       // Si hay archivo y herramienta, y además hay pregunta, enviar los tres juntos
-      if (filename && tool) {
-        const data = await sendMessageToBackend(userMessage.text, filename, tool);
+      if (filename && tool && session_id) {
+        const data = await sendMessageToBackend(userMessage.text, filename, tool, session_id);
         const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
         addMessage(botMessage);
         setSelectedTool(null); // Limpiar herramienta después de enviar
-      } else if (filename) {
-        // Si solo hay archivo, enviar pregunta con archivo
-        const data = await sendMessageToBackend(userMessage.text, filename, null);
+      } else if (filename && session_id) {
+        // Si solo hay archivo y session_id, enviar pregunta con archivo y session_id
+        const data = await sendMessageToBackend(userMessage.text, filename, null, session_id);
         const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
         addMessage(botMessage);
       } else {
-        // Si no hay archivo, solo enviar la pregunta
+        // Si no hay archivo ni session_id, solo enviar la pregunta
         const data = await sendMessageToBackend(userMessage.text, null, tool);
         const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
         addMessage(botMessage);
@@ -101,15 +102,16 @@ const Chatbot = () => {
             : msg
         ));
 
-        // Guardar el nombre del archivo subido en el estado para usarlo en preguntas posteriores
-        window.lastUploadedFile = data.filename;
+  // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
+  window.lastUploadedFile = data.filename;
+  window.lastSessionId = data.session_id;
 
         // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con archivo y herramienta juntos
         if (selectedTool && text && text.trim() !== '') {
           setIsLoading(true);
           try {
             // Enviar mensaje con filename y tool explícitos
-            const response = await sendMessageToBackend(text.trim(), data.filename, selectedTool);
+            const response = await sendMessageToBackend(text.trim(), data.filename, selectedTool, data.session_id);
             const botMessage = { text: response.response, isUser: false, id: Date.now() + 4 };
             addMessage(botMessage);
             setSelectedTool(null);

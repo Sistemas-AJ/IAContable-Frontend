@@ -26,12 +26,15 @@ export const getApiRoute = (route) => `${API_BASE}/${route}`;
  * @param {string|null} filename
  * @param {string|null} tool
  * @returns {Promise<{response: string}>}
+ * @param {string|null} session_id
+ * @returns {Promise<{response: string}>}
  */
-export async function sendMessageToBackend(message, filename = null, tool = null) {
+export async function sendMessageToBackend(message, filename = null, tool = null, session_id = null) {
   // Construir el cuerpo para POST
   const body = { message };
   if (filename) body.filename = filename;
   if (tool) body.tool = tool;
+  if (session_id) body.session_id = session_id;
 
   const response = await fetch(`${API_BASE}/chat`, {
     method: 'POST',

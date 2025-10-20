@@ -1,11 +1,13 @@
-// Función para formatear el mensaje del bot respetando saltos de línea, renderizando fórmulas y estructurando títulos/subtítulos en HTML de forma dinámica
+  // Función para formatear el mensaje del bot respetando saltos de línea, renderizando fórmulas y estructurando títulos/subtítulos en HTML de forma dinámica
 import React from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 
 export function formatBotMessage(text, isFinancialAnalysis = false) {
   if (!text) return null;
+  // Eliminar los <br> y reemplazarlos por saltos de línea reales
+  let cleanText = text.replace(/<br\s*\/?>(\r?\n)?/gi, '\n');
   // Eliminar todos los asteriscos '*' (Markdown bold/italic) y símbolos '#'
-  let cleanText = text.replace(/\*/g, '').replace(/\#/g, '');
+  cleanText = cleanText.replace(/\*/g, '').replace(/\#/g, '');
 
   // Transformar bloques \[ ... \] a $$ ... $$ para que KaTeX los renderice correctamente
   cleanText = cleanText.replace(/\\\[(.+?)\\\]/gs, function(_, formula) {
