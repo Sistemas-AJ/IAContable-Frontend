@@ -6,6 +6,12 @@ export function formatBotMessage(text, isFinancialAnalysis = false) {
   if (!text) return null;
   // Eliminar todos los asteriscos '*' (Markdown bold/italic) y símbolos '#'
   let cleanText = text.replace(/\*/g, '').replace(/\#/g, '');
+
+  // Transformar bloques \[ ... \] a $$ ... $$ para que KaTeX los renderice correctamente
+  cleanText = cleanText.replace(/\\\[(.+?)\\\]/gs, function(_, formula) {
+    return `$$${formula.trim()}$$`;
+  });
+
   if (isFinancialAnalysis) {
     // Procesar cada línea para detectar títulos, subtítulos y negritas, y agrupar líneas con '-' como listas
     const lines = cleanText.split(/\r?\n/);

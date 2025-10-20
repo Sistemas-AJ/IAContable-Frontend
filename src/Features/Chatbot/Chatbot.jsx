@@ -3,7 +3,7 @@ import ChatInput from '../../Components/InputBar/ChatInput';
 import './Chatbot.css';
 import { useState } from 'react';
 import { useChatMessages } from './hooks/useChatMessages';
-import { sendMessageToBackend, uploadFileToBackend, analyzeFinancialData } from '../../services/chatService';
+import { sendMessageToBackend, uploadSessionFileToBackend } from '../../services/chatService';
 import ChatMessages from './components/ChatMessages';
 
 const Chatbot = () => {
@@ -29,22 +29,26 @@ const Chatbot = () => {
     setInput('');
     setIsLoading(true);
     try {
-      // Detectar si la pregunta es de análisis financiero y hay archivo subido
+      // Si hay archivo subido y herramienta seleccionada, enviar todo junto
       const filename = window.lastUploadedFile || null;
       const tool = selectedTool || null;
-      const isFinancialAnalysis = /ratio|an[aá]lisis|liquidez|financier[ao]/i.test(input) && filename;
-      if (isFinancialAnalysis) {
-        // Leer el archivo subido (Excel) y enviarlo al backend para análisis
-        // Aquí deberías obtener los datos del archivo, pero como frontend no puede leer Excel directamente,
-        // solo mandamos el nombre del archivo y el backend debe saber extraerlo.
-        const data = { filename };
-        const result = await analyzeFinancialData(data);
-        const botMessage = { text: result.data ? JSON.stringify(result.data, null, 2) : result.message, isUser: false, id: Date.now() + 1 };
-        addMessage(botMessage);
-      } else {
+      // Si hay archivo y herramienta, y además hay pregunta, enviar los tres juntos
+      if (filename && tool) {
         const data = await sendMessageToBackend(userMessage.text, filename, tool);
         const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
         addMessage(botMessage);
+        setSelectedTool(null); // Limpiar herramienta después de enviar
+      } else if (filename) {
+        // Si solo hay archivo, enviar pregunta con archivo
+        const data = await sendMessageToBackend(userMessage.text, filename, null);
+        const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
+        addMessage(botMessage);
+      } else {
+        // Si no hay archivo, solo enviar la pregunta
+        const data = await sendMessageToBackend(userMessage.text, null, tool);
+        const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
+        addMessage(botMessage);
+        setSelectedTool(null);
       }
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
@@ -83,7 +87,7 @@ const Chatbot = () => {
 
       try {
         // Enviar archivo y herramienta seleccionada como metadata
-        const data = await uploadFileToBackend(file, selectedTool);
+  const data = await uploadSessionFileToBackend(file, selectedTool);
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMessage.id
             ? {
@@ -100,17 +104,7 @@ const Chatbot = () => {
         // Guardar el nombre del archivo subido en el estado para usarlo en preguntas posteriores
         window.lastUploadedFile = data.filename;
 
-        // Si hay herramienta seleccionada y NO hay pregunta, preguntar al usuario qué desea hacer
-        if (selectedTool && (!text || text.trim() === '')) {
-          const askMessage = {
-            text: `¿Qué deseas hacer con el archivo "${data.filename}" usando la herramienta "${selectedTool}"?`,
-            isUser: false,
-            id: Date.now() + 3
-          };
-          addMessage(askMessage);
-        }
-
-        // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con contexto
+        // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con archivo y herramienta juntos
         if (selectedTool && text && text.trim() !== '') {
           setIsLoading(true);
           try {
@@ -119,6 +113,7 @@ const Chatbot = () => {
             const botMessage = { text: response.response, isUser: false, id: Date.now() + 4 };
             addMessage(botMessage);
             setSelectedTool(null);
+            setInput(''); // Limpiar input después de enviar todo junto
           } catch (error) {
             console.error('Error al procesar la pregunta:', error);
             const errorMessage = { text: 'Lo siento, hubo un error al procesar tu solicitud.', isUser: false, id: Date.now() + 4 };
@@ -126,6 +121,14 @@ const Chatbot = () => {
           } finally {
             setIsLoading(false);
           }
+        } else if (selectedTool && (!text || text.trim() === '')) {
+          // Si hay herramienta seleccionada y NO hay pregunta, preguntar al usuario qué desea hacer
+          const askMessage = {
+            text: `¿Qué deseas hacer con el archivo "${data.filename}" usando la herramienta "${selectedTool}"?`,
+            isUser: false,
+            id: Date.now() + 3
+          };
+          addMessage(askMessage);
         }
 
       } catch (error) {
@@ -142,9 +145,7 @@ const Chatbot = () => {
         }
       }
     }
-    if (text && text.trim() !== '') {
-      await handleSend();
-    }
+    // No llamar a handleSend aquí, ya que el envío de la pregunta se maneja arriba si corresponde
   };
 
   return (
