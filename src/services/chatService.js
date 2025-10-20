@@ -89,20 +89,18 @@ export async function uploadSessionFileToBackend(file, session_id = null) {
   formData.append('file', file);
   if (session_id) formData.append('session_id', session_id);
   try {
-    const response = await api.post('/session/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+    // Usar fetch para poder leer texto plano fácilmente
+    const response = await fetch(`${API_BASE}/session/upload`, {
+      method: 'POST',
+      body: formData
     });
-    return response.data;
+    if (!response.ok) {
+      throw new Error('Error al subir el archivo de sesión');
+    }
+    const text = await response.text();
+    // Devolver el texto plano como un objeto para mantener compatibilidad
+    return { message: text };
   } catch (error) {
-    // Si el backend devuelve un mensaje de error, úsalo
-    if (error.response && error.response.data && error.response.data.message) {
-      throw new Error(error.response.data.message);
-    }
-    // Si hay detalles en error.response.data, muéstralos
-    if (error.response && error.response.data) {
-      throw new Error(JSON.stringify(error.response.data));
-    }
-    // Si no, muestra el error genérico
     throw new Error('Error al subir el archivo de sesión');
   }
 }

@@ -77,20 +77,24 @@ const Chatbot = () => {
       };
       addMessage(fileMessage);
 
+      // Usar un id único basado en el nombre del archivo para evitar duplicados
+      const loadingMessageId = `loading-${file.name}`;
+      // Antes de agregar, eliminar cualquier mensaje de carga previo para este archivo
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessageId));
       const loadingMessage = {
         text: `Procesando "${file.name}"...`,
         isUser: false,
         isLoading: true,
-        id: Date.now() + 1
+        id: loadingMessageId
       };
       addMessage(loadingMessage);
       setIsLoading(true);
 
       try {
         // Enviar archivo y herramienta seleccionada como metadata
-  const data = await uploadSessionFileToBackend(file, selectedTool);
+        const data = await uploadSessionFileToBackend(file, selectedTool);
         setMessages(prev => prev.map(msg =>
-          msg.id === loadingMessage.id
+          msg.id === loadingMessageId
             ? {
                 ...msg,
                 text:
@@ -102,9 +106,9 @@ const Chatbot = () => {
             : msg
         ));
 
-  // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
-  window.lastUploadedFile = data.filename;
-  window.lastSessionId = data.session_id;
+        // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
+        window.lastUploadedFile = data.filename;
+        window.lastSessionId = data.session_id;
 
         // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con archivo y herramienta juntos
         if (selectedTool && text && text.trim() !== '') {
@@ -143,7 +147,7 @@ const Chatbot = () => {
       } catch (error) {
         console.error('Error al subir archivo:', error);
         setMessages(prev => prev.map( msg =>
-          msg.id === loadingMessage.id
+          msg.id === loadingMessageId
             ? { ...msg, text: `❌ Error al procesar el archivo: ${error.message || 'Inténtalo de nuevo.'}`, isLoading: false }
             : msg
         ));

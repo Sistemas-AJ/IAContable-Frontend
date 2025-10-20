@@ -41,7 +41,7 @@ const ChatMessages = ({ messages, isLoading }) => (
             <span></span>
             <span></span>
           </div>
-          Pensando...
+          
         </div>
       </div>
     )}
