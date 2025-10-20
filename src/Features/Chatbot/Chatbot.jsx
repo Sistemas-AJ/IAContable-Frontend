@@ -28,33 +28,33 @@ const Chatbot = () => {
     addMessage(userMessage);
     setInput('');
     setIsLoading(true);
+    let botMsgId = Date.now() + 1;
+    let lastBotMessage = { text: '', isUser: false, id: botMsgId };
+    addMessage(lastBotMessage);
     try {
-      // Si hay archivo subido y herramienta seleccionada, enviar todo junto
       const filename = window.lastUploadedFile || null;
       const tool = selectedTool || null;
       const session_id = window.lastSessionId || null;
-      // Si hay archivo y herramienta, y además hay pregunta, enviar los tres juntos
+      // Callback para mostrar respuesta en tiempo real
+      const onProgress = (partial) => {
+        setMessages(prev => prev.map(msg =>
+          msg.id === botMsgId ? { ...msg, text: partial } : msg
+        ));
+      };
       if (filename && tool && session_id) {
-        const data = await sendMessageToBackend(userMessage.text, filename, tool, session_id);
-        const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
-        addMessage(botMessage);
-        setSelectedTool(null); // Limpiar herramienta después de enviar
+        await sendMessageToBackend(userMessage.text, filename, tool, session_id, onProgress);
+        setSelectedTool(null);
       } else if (filename && session_id) {
-        // Si solo hay archivo y session_id, enviar pregunta con archivo y session_id
-        const data = await sendMessageToBackend(userMessage.text, filename, null, session_id);
-        const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
-        addMessage(botMessage);
+        await sendMessageToBackend(userMessage.text, filename, null, session_id, onProgress);
       } else {
-        // Si no hay archivo ni session_id, solo enviar la pregunta
-        const data = await sendMessageToBackend(userMessage.text, null, tool);
-        const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
-        addMessage(botMessage);
+        await sendMessageToBackend(userMessage.text, null, tool, null, onProgress);
         setSelectedTool(null);
       }
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
-      const errorMessage = { text: 'Lo siento, hubo un error al procesar tu mensaje.', isUser: false, id: Date.now() + 1 };
-      addMessage(errorMessage);
+      setMessages(prev => prev.map(msg =>
+        msg.id === botMsgId ? { ...msg, text: 'Lo siento, hubo un error al procesar tu mensaje.' } : msg
+      ));
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +88,7 @@ const Chatbot = () => {
 
       try {
         // Enviar archivo y herramienta seleccionada como metadata
-  const data = await uploadSessionFileToBackend(file, selectedTool);
+        const data = await uploadSessionFileToBackend(file, selectedTool);
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMessage.id
             ? {
@@ -102,12 +102,19 @@ const Chatbot = () => {
             : msg
         ));
 
-  // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
-  window.lastUploadedFile = data.filename;
-  window.lastSessionId = data.session_id;
+        // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
+        window.lastUploadedFile = data.filename;
+        window.lastSessionId = data.session_id;
 
         // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con archivo y herramienta juntos
         if (selectedTool && text && text.trim() !== '') {
+          // Agregar el mensaje de la pregunta del usuario antes de enviar al backend
+          const userQuestionMessage = {
+            text: text.trim(),
+            isUser: true,
+            id: Date.now() + 3
+          };
+          addMessage(userQuestionMessage);
           setIsLoading(true);
           try {
             // Enviar mensaje con filename y tool explícitos
@@ -157,7 +164,7 @@ const Chatbot = () => {
         {messages.length === 0 ? (
           <div className="welcome-message">
             <h1>Hola,</h1>
-            <p>¿Cómo puedo ayudarte hoy?</p>
+            <p>¿En qué puedo ayudarte hoy?</p>
           </div>
         ) : (
           <ChatMessages messages={messages} isLoading={isLoading} />

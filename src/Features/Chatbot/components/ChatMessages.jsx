@@ -20,7 +20,8 @@ const ChatMessages = ({ messages, isLoading }) => (
                 <span></span>
                 <span></span>
               </div>
-              {msg.text}
+              {/* Solo mostrar "Pensando..." si no hay archivos subidos */}
+              Pensando...
             </div>
           ) : (
             msg.isUser

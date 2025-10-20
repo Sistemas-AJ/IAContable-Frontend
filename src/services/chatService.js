@@ -21,16 +21,15 @@ export const getApiRoute = (route) => `${API_BASE}/${route}`;
 // --- ENDPOINTS REALES DEL BACKEND ---
 
 /**
- * Enviar mensaje al backend usando POST y procesar el stream SSE manualmente
+ * Enviar mensaje al backend usando POST y procesar el stream SSE manualmente, permitiendo mostrar la respuesta en tiempo real.
  * @param {string} message
  * @param {string|null} filename
  * @param {string|null} tool
- * @returns {Promise<{response: string}>}
  * @param {string|null} session_id
+ * @param {(partial: string) => void} [onProgress] - Callback para cada fragmento recibido
  * @returns {Promise<{response: string}>}
  */
-export async function sendMessageToBackend(message, filename = null, tool = null, session_id = null) {
-  // Construir el cuerpo para POST
+export async function sendMessageToBackend(message, filename = null, tool = null, session_id = null, onProgress = null) {
   const body = { message };
   if (filename) body.filename = filename;
   if (tool) body.tool = tool;
@@ -48,7 +47,6 @@ export async function sendMessageToBackend(message, filename = null, tool = null
     throw new Error('Error en la respuesta del servidor');
   }
 
-  // Procesar el stream SSE manualmente
   const reader = response.body.getReader();
   const decoder = new TextDecoder('utf-8');
   let fullResponse = '';
@@ -60,22 +58,23 @@ export async function sendMessageToBackend(message, filename = null, tool = null
     done = doneReading;
     if (value) {
       buffer += decoder.decode(value, { stream: true });
-      // Procesar eventos SSE
       const events = buffer.split(/\n\n/);
-      buffer = events.pop(); // El último puede estar incompleto
+      buffer = events.pop();
       for (const event of events) {
         if (event.includes('event: end')) {
-          // Fin del stream
+          if (onProgress) onProgress(fullResponse.trim());
           return { response: fullResponse.trim() };
         }
         const dataMatch = event.match(/data:([\s\S]*)/);
         if (dataMatch) {
-          fullResponse += dataMatch[1].trim() + '\n';
+          const fragment = dataMatch[1].trim();
+          fullResponse += fragment + '\n';
+          if (onProgress) onProgress(fullResponse.trim());
         }
       }
     }
   }
-  // Si termina sin evento 'end', devolver lo acumulado
+  if (onProgress) onProgress(fullResponse.trim());
   return { response: fullResponse.trim() };
 }
 
