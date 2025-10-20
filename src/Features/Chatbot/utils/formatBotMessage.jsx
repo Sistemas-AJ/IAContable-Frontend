@@ -2,101 +2,99 @@
 import React from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 
-export function formatBotMessage(text, isFinancialAnalysis = false) {
+
+export function formatBotMessage(text) {
   if (!text) return null;
-  // Eliminar los <br> y reemplazarlos por saltos de línea reales
+
+  // Normalizar saltos de línea y limpiar HTML básico
   let cleanText = text.replace(/<br\s*\/?>(\r?\n)?/gi, '\n');
-  // Eliminar todos los asteriscos '*' (Markdown bold/italic) y símbolos '#'
-  cleanText = cleanText.replace(/\*/g, '').replace(/\#/g, '');
+  cleanText = cleanText.replace(/\r\n|\r/g, '\n');
+  // Eliminar todos los asteriscos '*'
+  cleanText = cleanText.replace(/\*/g, '');
 
-  // Transformar bloques \[ ... \] a $$ ... $$ para que KaTeX los renderice correctamente
-  cleanText = cleanText.replace(/\\\[(.+?)\\\]/gs, function(_, formula) {
-    return `$$${formula.trim()}$$`;
-  });
+  // Transformar bloques \[ ... \] a $$ ... $$ para KaTeX
+  cleanText = cleanText.replace(/\\\[(.+?)\\\]/gs, (_, formula) => `$$${formula.trim()}$$`);
 
-  if (isFinancialAnalysis) {
-    // Procesar cada línea para detectar títulos, subtítulos y negritas, y agrupar líneas con '-' como listas
-    const lines = cleanText.split(/\r?\n/);
-    let htmlLines = [];
-    let inList = false;
-    for (let idx = 0; idx < lines.length; idx++) {
-      const line = lines[idx];
-      // Título principal: primera línea no vacía y no guion
-      if (idx === 0 && line.trim() && !line.trim().startsWith('-')) {
-        htmlLines.push(`<h1>${line.trim()}</h1>`);
-        continue;
-      }
-      // Subtítulo: línea sola, no guion, no vacía, y anterior línea vacía
-      if (
-        line.trim() &&
-        !line.trim().startsWith('-') &&
-        (idx === 0 || lines[idx - 1].trim() === '')
-      ) {
-        if (idx !== 0) htmlLines.push(`<h2>${line.trim()}</h2>`);
-        continue;
-      }
-      // Elementos de lista: líneas que empiezan con '-'
-      if (line.trim().startsWith('-')) {
-        // Abrir lista si no está abierta
-        if (!inList) {
-          htmlLines.push('<ul>');
-          inList = true;
-        }
-        // Negrita para nombres de cuentas: - Nombre:
-        const boldMatch = line.match(/^-\s*([\w\sÁÉÍÓÚáéíóúÑñ]+):/);
-        if (boldMatch) {
-          htmlLines.push(`<li><strong>${boldMatch[1]}:</strong>${line.replace(/^-\s*[\w\sÁÉÍÓÚáéíóúÑñ]+:/, '')}</li>`);
-        } else {
-          htmlLines.push(`<li>${line.replace(/^-\s*/, '')}</li>`);
-        }
-        // Si es la última línea o la siguiente no es lista, cerrar la lista
-        if (idx === lines.length - 1 || !lines[idx + 1].trim().startsWith('-')) {
-          htmlLines.push('</ul>');
-          inList = false;
-        }
-        continue;
-      }
-      // Si no, devolver la línea tal cual
-      htmlLines.push(line);
-    }
-    cleanText = htmlLines.join('\n');
-  }
-  // Procesar bloques LaTeX ($$...$$)
-  const blockRegex = /\$\$(.+?)\$\$/gs;
-  const inlineRegex = /\$(.+?)\$/g;
+  // Detectar y formatear títulos y subtítulos (líneas que empiezan con número, doble asterisco, o mayúsculas)
+  const lines = cleanText.split('\n');
   let elements = [];
-  let lastIndex = 0;
-  let match;
   let key = 0;
+  let inList = false;
+  let listBuffer = [];
 
-  // Procesar bloques $$...$$
-  while ((match = blockRegex.exec(cleanText)) !== null) {
-    if (match.index > lastIndex) {
-      const before = cleanText.slice(lastIndex, match.index);
-      elements.push(renderHtmlOrLines(before, key));
-      key += 1000;
+  const pushList = () => {
+    if (listBuffer.length > 0) {
+      elements.push(
+        <ul key={key++}>
+          {listBuffer.map((item, idx) => <li key={idx}>{item}</li>)}
+        </ul>
+      );
+      listBuffer = [];
     }
-    elements.push(<BlockMath key={key++}>{match[1]}</BlockMath>);
-    lastIndex = match.index + match[0].length;
-  }
-  if (lastIndex < cleanText.length) {
-    const rest = cleanText.slice(lastIndex);
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (!line) {
+      pushList();
+      // No insertar <br /> para líneas vacías
+      continue;
+    }
+
+    // Títulos: **TEXTO:** o 1. TEXTO o TODO MAYÚSCULAS o **TEXTO**
+    if (/^(\d+\.|\*\*|[A-ZÁÉÍÓÚÑ\s]{8,})/.test(line)) {
+      pushList();
+      // Quitar asteriscos y dos puntos
+      let title = line.replace(/^\*\*|\*\*$/g, '').replace(/:$/, '');
+      // Si es muy largo y mayúsculas, h2, si no h3
+      if (/^[A-ZÁÉÍÓÚÑ\s]{8,}$/.test(title)) {
+        elements.push(<h2 key={key++}>{title}</h2>);
+      } else {
+        elements.push(<h3 key={key++}>{title}</h3>);
+      }
+      continue;
+    }
+
+    // Listas: - item, * item
+    if (/^(-|\*)\s+/.test(line)) {
+      listBuffer.push(line.replace(/^(-|\*)\s+/, ''));
+      continue;
+    }
+
+    // Fórmulas LaTeX en bloque $$...$$
+    const blockMath = line.match(/^\$\$(.+)\$\$$/s);
+    if (blockMath) {
+      pushList();
+      elements.push(<BlockMath key={key++}>{blockMath[1]}</BlockMath>);
+      continue;
+    }
+
+    // Fórmulas inline $...$
     let lastInline = 0;
     let inlineMatch;
-    while ((inlineMatch = inlineRegex.exec(rest)) !== null) {
+    const inlineRegex = /\$(.+?)\$/g;
+    let inlines = [];
+    while ((inlineMatch = inlineRegex.exec(line)) !== null) {
       if (inlineMatch.index > lastInline) {
-        const before = rest.slice(lastInline, inlineMatch.index);
-        elements.push(renderHtmlOrLines(before, key));
-        key += 1000;
+        inlines.push(line.slice(lastInline, inlineMatch.index));
       }
-      elements.push(<InlineMath key={key++}>{inlineMatch[1]}</InlineMath>);
+      inlines.push(<InlineMath key={key++}>{inlineMatch[1]}</InlineMath>);
       lastInline = inlineMatch.index + inlineMatch[0].length;
     }
-    if (lastInline < rest.length) {
-      const after = rest.slice(lastInline);
-      elements.push(renderHtmlOrLines(after, key));
+    if (inlines.length > 0) {
+      if (lastInline < line.length) {
+        inlines.push(line.slice(lastInline));
+      }
+      pushList();
+      elements.push(<span key={key++}>{inlines}</span>);
+      continue;
     }
+
+    // Si no es nada especial, texto normal
+    pushList();
+    elements.push(<span key={key++}>{line}</span>);
   }
+  pushList();
   return elements;
 }
 

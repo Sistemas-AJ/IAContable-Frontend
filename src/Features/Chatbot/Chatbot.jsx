@@ -88,7 +88,7 @@ const Chatbot = () => {
 
       try {
         // Enviar archivo y herramienta seleccionada como metadata
-        const data = await uploadSessionFileToBackend(file, selectedTool);
+  const data = await uploadSessionFileToBackend(file, selectedTool);
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMessage.id
             ? {
@@ -102,27 +102,27 @@ const Chatbot = () => {
             : msg
         ));
 
-        // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
-        window.lastUploadedFile = data.filename;
-        window.lastSessionId = data.session_id;
+  // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
+  window.lastUploadedFile = data.filename;
+  window.lastSessionId = data.session_id;
 
         // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con archivo y herramienta juntos
         if (selectedTool && text && text.trim() !== '') {
-          // Agregar el mensaje de la pregunta del usuario antes de enviar al backend
-          const userQuestionMessage = {
-            text: text.trim(),
-            isUser: true,
-            id: Date.now() + 3
-          };
-          addMessage(userQuestionMessage);
           setIsLoading(true);
           try {
             // Enviar mensaje con filename y tool explícitos
             const response = await sendMessageToBackend(text.trim(), data.filename, selectedTool, data.session_id);
+            // Agregar el mensaje del usuario (la pregunta) al historial SOLO cuando realmente se envía
+            const userQuestionMessage = { text: text.trim(), isUser: true, id: Date.now() + 3 };
+            addMessage(userQuestionMessage);
+            // Agregar la respuesta del bot
             const botMessage = { text: response.response, isUser: false, id: Date.now() + 4 };
             addMessage(botMessage);
             setSelectedTool(null);
             setInput(''); // Limpiar input después de enviar todo junto
+            if (clearFilesRef.current) {
+              clearFilesRef.current(); // Limpiar archivos adjuntos
+            }
           } catch (error) {
             console.error('Error al procesar la pregunta:', error);
             const errorMessage = { text: 'Lo siento, hubo un error al procesar tu solicitud.', isUser: false, id: Date.now() + 4 };
@@ -144,7 +144,7 @@ const Chatbot = () => {
         console.error('Error al subir archivo:', error);
         setMessages(prev => prev.map( msg =>
           msg.id === loadingMessage.id
-            ? { ...msg, text: '❌ Error al procesar el archivo. Inténtalo de nuevo.', isLoading: false }
+            ? { ...msg, text: `❌ Error al procesar el archivo: ${error.message || 'Inténtalo de nuevo.'}`, isLoading: false }
             : msg
         ));
       } finally {

@@ -94,6 +94,15 @@ export async function uploadSessionFileToBackend(file, session_id = null) {
     });
     return response.data;
   } catch (error) {
+    // Si el backend devuelve un mensaje de error, úsalo
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    // Si hay detalles en error.response.data, muéstralos
+    if (error.response && error.response.data) {
+      throw new Error(JSON.stringify(error.response.data));
+    }
+    // Si no, muestra el error genérico
     throw new Error('Error al subir el archivo de sesión');
   }
 }
