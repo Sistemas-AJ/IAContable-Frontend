@@ -21,7 +21,7 @@ const Chatbot = () => {
     setClearFiles
   } = useChatMessages();
 
-  // Enviar mensaje al backend
+  // Enviar mensaje (solo texto) al backend
   const handleSend = async () => {
     if (input.trim() === '' || isLoading) return;
     const userMessage = { text: input, isUser: true, id: Date.now() };
@@ -35,12 +35,14 @@ const Chatbot = () => {
       const filename = window.lastUploadedFile || null;
       const tool = selectedTool || null;
       const session_id = window.lastSessionId || null;
+      
       // Callback para mostrar respuesta en tiempo real
       const onProgress = (partial) => {
         setMessages(prev => prev.map(msg =>
           msg.id === botMsgId ? { ...msg, text: partial } : msg
         ));
       };
+
       if (filename && tool && session_id) {
         await sendMessageToBackend(userMessage.text, filename, tool, session_id, onProgress);
         setSelectedTool(null);
@@ -65,9 +67,18 @@ const Chatbot = () => {
     // Solo actualiza el input, no sube archivos
   };
 
-  // Subir archivos solo cuando se presiona enviar
+  // --- ESTA ES LA FUNCIÓN CORREGIDA ---
+  // Subir archivos y manejar la pregunta adjunta
   const handleSendFiles = async (files, text) => {
     if (!files || files.length === 0) return;
+
+    // 1. Capturamos la pregunta y limpiamos la UI inmediatamente
+    const question = text.trim();
+    setInput(''); // Limpiar el <textarea>
+    if (clearFilesRef.current) {
+      clearFilesRef.current(); // Limpiar la vista previa de archivos en ChatInput
+    }
+
     for (const file of files) {
       const fileMessage = {
         text: `Archivo subido: ${file.name}`,
@@ -77,88 +88,125 @@ const Chatbot = () => {
       };
       addMessage(fileMessage);
 
-      // Usar un id único basado en el nombre del archivo para evitar duplicados
-      const loadingMessageId = `loading-${file.name}`;
-      // Antes de agregar, eliminar cualquier mensaje de carga previo para este archivo
-      setMessages(prev => prev.filter(msg => msg.id !== loadingMessageId));
-      const loadingMessage = {
+      // ID único para el mensaje de carga
+      const loadingMessageId = `loading-${file.name}-${Date.now()}`;
+      addMessage({
         text: `Procesando "${file.name}"...`,
         isUser: false,
         isLoading: true,
         id: loadingMessageId
-      };
-      addMessage(loadingMessage);
+      });
       setIsLoading(true);
 
       try {
-        // Enviar archivo y herramienta seleccionada como metadata
-        const data = await uploadSessionFileToBackend(file, selectedTool);
+        // 2. Enviar archivo y herramienta (si existe)
+        const response = await uploadSessionFileToBackend(file, selectedTool);
+
+        // --- FIX 1: VALIDACIÓN Y PARSEO (NUEVO) ---
+        // El backend está devolviendo un JSON dentro de un string en la clave "message"
+        let data;
+        try {
+          // Primero, verificamos si 'response' y 'response.message' existen
+          if (!response || !response.message) {
+             console.error("Respuesta del backend no tiene la clave 'message':", response);
+             throw new Error("Formato de respuesta inesperado del servidor.");
+          }
+          
+          // Parseamos el string JSON que está en 'response.message'
+          data = JSON.parse(response.message);
+
+        } catch (e) {
+          console.error("Error al parsear la respuesta del backend:", response.message, e);
+          throw new Error("Error de formato en la respuesta del servidor.");
+        }
+
+        // Ahora validamos el 'data' parseado
+        if (!data || !data.filename || !data.session_id) {
+          console.error("Respuesta inesperada del backend (después de parsear):", data);
+          throw new Error("El servidor no devolvió la información del archivo procesado.");
+        }
+
+        const processedFilename = data.filename;
+        const sessionId = data.session_id;
+
+        // 3. Mostrar mensaje de éxito
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMessageId
             ? {
                 ...msg,
                 text:
                   selectedTool
-                    ? `✅ Archivo "${data.filename}" procesado exitosamente. El archivo será evaluado para análisis de ${selectedTool.toLowerCase()}.`
-                    : `✅ Archivo "${data.filename}" procesado exitosamente. Ahora puedes preguntarme sobre su contenido.`,
+                    ? `✅ Archivo "${processedFilename}" procesado. Se usará la herramienta ${selectedTool.toLowerCase()}.`
+                    : `✅ Archivo "${processedFilename}" procesado. Ahora puedes preguntarme sobre él.`,
                 isLoading: false
               }
             : msg
         ));
 
-        // Guardar el nombre del archivo subido y el session_id en el estado para usarlo en preguntas posteriores
-        window.lastUploadedFile = data.filename;
-        window.lastSessionId = data.session_id;
+        // Guardar datos del último archivo para futuras preguntas
+        window.lastUploadedFile = processedFilename;
+        window.lastSessionId = sessionId;
 
-        // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con archivo y herramienta juntos
-        if (selectedTool && text && text.trim() !== '') {
-          setIsLoading(true);
+        // --- FIX 2: LÓGICA DE ENVÍO DE PREGUNTA ---
+        
+        if (question) {
+          // 4. Si hay pregunta, la enviamos automáticamente
+          
+          const userQuestionMessage = { text: question, isUser: true, id: Date.now() + 1 };
+          addMessage(userQuestionMessage);
+          
+          const botMsgId = Date.now() + 2;
+          addMessage({ text: '', isUser: false, id: botMsgId });
+          
+          setIsLoading(true); // Aseguramos que siga cargando mientras responde
+
           try {
-            // Enviar mensaje con filename y tool explícitos
-            const response = await sendMessageToBackend(text.trim(), data.filename, selectedTool, data.session_id);
-            // Agregar el mensaje del usuario (la pregunta) al historial SOLO cuando realmente se envía
-            const userQuestionMessage = { text: text.trim(), isUser: true, id: Date.now() + 3 };
-            addMessage(userQuestionMessage);
-            // Agregar la respuesta del bot
-            const botMessage = { text: response.response, isUser: false, id: Date.now() + 4 };
-            addMessage(botMessage);
-            setSelectedTool(null);
-            setInput(''); // Limpiar input después de enviar todo junto
-            if (clearFilesRef.current) {
-              clearFilesRef.current(); // Limpiar archivos adjuntos
-            }
+            // Callback para streaming (onProgress)
+            const onProgress = (partial) => {
+              setMessages(prev => prev.map(msg =>
+                msg.id === botMsgId ? { ...msg, text: partial } : msg
+              ));
+            };
+
+            // Enviar la pregunta
+            await sendMessageToBackend(question, processedFilename, selectedTool, sessionId, onProgress);
+            
+            setSelectedTool(null); // Limpiar la herramienta
+
           } catch (error) {
             console.error('Error al procesar la pregunta:', error);
-            const errorMessage = { text: 'Lo siento, hubo un error al procesar tu solicitud.', isUser: false, id: Date.now() + 4 };
-            addMessage(errorMessage);
+            setMessages(prev => prev.map(msg =>
+              msg.id === botMsgId ? { ...msg, text: 'Lo siento, hubo un error al procesar tu pregunta.' } : msg
+            ));
           } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Terminar carga (pregunta)
           }
-        } else if (selectedTool && (!text || text.trim() === '')) {
-          // Si hay herramienta seleccionada y NO hay pregunta, preguntar al usuario qué desea hacer
+
+        } else if (selectedTool) {
+          // 5. Si NO hay pregunta, PERO SÍ hay herramienta
           const askMessage = {
-            text: `¿Qué deseas hacer con el archivo "${data.filename}" usando la herramienta "${selectedTool}"?`,
+            text: `¿Qué deseas hacer con el archivo "${processedFilename}" usando la herramienta "${selectedTool}"?`,
             isUser: false,
             id: Date.now() + 3
           };
           addMessage(askMessage);
+          setIsLoading(false); // Terminar carga (solo subida)
+        } else {
+          // 6. Si NO hay pregunta NI herramienta
+          setIsLoading(false);
         }
 
       } catch (error) {
+        // Error durante la SUBIDA del archivo
         console.error('Error al subir archivo:', error);
         setMessages(prev => prev.map( msg =>
           msg.id === loadingMessageId
             ? { ...msg, text: `❌ Error al procesar el archivo: ${error.message || 'Inténtalo de nuevo.'}`, isLoading: false }
             : msg
         ));
-      } finally {
         setIsLoading(false);
-        if (clearFilesRef.current) {
-          clearFilesRef.current();
-        }
       }
     }
-    // No llamar a handleSend aquí, ya que el envío de la pregunta se maneja arriba si corresponde
   };
 
   return (
@@ -176,9 +224,9 @@ const Chatbot = () => {
         <ChatInput
           value={input}
           onChange={e => setInput(e.target.value)}
-          onSend={handleSend}
+          onSend={handleSend} // Para enviar solo texto
           onFileChange={handleFileChange}
-          onSendFiles={handleSendFiles}
+          onSendFiles={handleSendFiles} // Para enviar archivos (con o sin texto)
           onClearFiles={setClearFiles}
           disabled={isLoading}
           selectedTool={selectedTool}
