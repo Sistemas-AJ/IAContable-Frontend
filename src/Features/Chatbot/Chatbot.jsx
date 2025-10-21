@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useChatMessages } from './hooks/useChatMessages';
 import { sendMessageToBackend, uploadSessionFileToBackend } from '../../services/chatService';
 import ChatMessages from './components/ChatMessages';
+import { FaCheck } from "react-icons/fa";
 
 const Chatbot = () => {
   const [input, setInput] = useState('');
@@ -134,11 +135,12 @@ const Chatbot = () => {
           msg.id === loadingMessageId
             ? {
                 ...msg,
-                text:
+                text: '', // El texto lo pondremos en el render
+                isLoading: false,
+                customSuccess: {
+                  processedFilename,
                   selectedTool
-                    ? `✅ Archivo "${processedFilename}" procesado. Se usará la herramienta ${selectedTool.toLowerCase()}.`
-                    : `✅ Archivo "${processedFilename}" procesado. Ahora puedes preguntarme sobre él.`,
-                isLoading: false
+                }
               }
             : msg
         ));
@@ -201,7 +203,7 @@ const Chatbot = () => {
         console.error('Error al subir archivo:', error);
         setMessages(prev => prev.map( msg =>
           msg.id === loadingMessageId
-            ? { ...msg, text: `❌ Error al procesar el archivo: ${error.message || 'Inténtalo de nuevo.'}`, isLoading: false }
+            ? { ...msg, text: ` Error al procesar el archivo: ${error.message || 'Inténtalo de nuevo.'}`, isLoading: false }
             : msg
         ));
         setIsLoading(false);
@@ -219,7 +221,18 @@ const Chatbot = () => {
             <p>¿En qué puedo ayudarte hoy?</p>
           </div>
         ) : (
-          <ChatMessages messages={messages} isLoading={isLoading} />
+          <ChatMessages
+            messages={messages}
+            isLoading={isLoading}
+            renderCustomSuccess={(msg) => (
+              <div className="bot-message" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FaCheck style={{ color: '#27ae60', fontSize: 18 }} />
+                {msg.customSuccess.selectedTool
+                  ? `Archivo "${msg.customSuccess.processedFilename}" procesado. Se usará la herramienta ${msg.customSuccess.selectedTool.toLowerCase()}.`
+                  : `Archivo "${msg.customSuccess.processedFilename}" procesado. Ahora puedes preguntarme sobre él.`}
+              </div>
+            )}
+          />
         )}
         <ChatInput
           value={input}
