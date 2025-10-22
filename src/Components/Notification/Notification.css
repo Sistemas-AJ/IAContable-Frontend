@@ -1,0 +1,81 @@
+/**
+ * Notification.css (Estilo Mejorado)
+ *
+ * Este diseño es más limpio, usa un fondo claro, sombras suaves y 
+ * una barra de color para indicar el tipo de mensaje (ej. éxito).
+ *
+ * NOTA: Este CSS está diseñado para funcionar mejor si modificas 
+ * tu Notification.jsx para incluir un ícono, como el 'FaCheck'
+ * que ya usas en otras partes.
+ */
+
+
+.notification-toast {
+  position: fixed;
+  top: 24px;
+  right: 32px;
+  left: auto;
+  transform: none;
+  z-index: 9999;
+
+  background: #ffffff;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eee;
+  border-left: 5px solid #27ae60;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  min-width: 320px;
+  max-width: 500px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  animation: fadeInDown 0.4s ease-out;
+}
+
+/* Clase para la animación de salida. 
+  Debes añadirla a tu componente 
+  (Notification.jsx) ANTES de que 'visible' sea 'false'
+  para que la animación se ejecute.
+*/
+.notification-toast.fade-out {
+  animation: fadeOutUp 0.4s ease-in forwards;
+}
+
+/* Estilo sugerido para el ícono.
+  (Tendrías que añadir un <FaCheckCircle className="notification-icon" /> 
+  en tu Notification.jsx)
+*/
+.notification-icon {
+  font-size: 20px;
+  color: #27ae60; /* Verde de éxito */
+  flex-shrink: 0; /* Evita que el ícono se encoja */
+}
+
+/* --- Animaciones --- */
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}

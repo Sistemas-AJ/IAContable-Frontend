@@ -7,7 +7,7 @@ import { sendMessageToBackend, uploadSessionFileToBackend } from '../../services
 import ChatMessages from './components/ChatMessages';
 import { FaCheck } from "react-icons/fa";
 
-const Chatbot = () => {
+const Chatbot = ({ showNotification }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTool, setSelectedTool] = useState(null);
@@ -68,23 +68,21 @@ const Chatbot = () => {
     // Solo actualiza el input, no sube archivos
   };
 
-  // --- ESTA ES LA FUNCIÓN CORREGIDA ---
-  // Subir archivos y manejar la pregunta adjunta
+
+  // Subir archivos y enviar pregunta + herramienta al backend
   const handleSendFiles = async (files, text) => {
     if (!files || files.length === 0) return;
 
-    // 1. Capturamos la pregunta y limpiamos la UI inmediatamente
     const question = text.trim();
-    setInput(''); // Limpiar el <textarea>
+    setInput('');
     if (clearFilesRef.current) {
-      clearFilesRef.current(); // Limpiar la vista previa de archivos en ChatInput
+      clearFilesRef.current();
     }
 
     for (const file of files) {
       const fileMessage = {
         text: question
-          ? `Archivo subido: ${file.name}
-           + pregunta: "${question}"`
+          ? `Archivo subido: ${file.name}\n+ pregunta: "${question}"`
           : `Archivo subido: ${file.name}`,
         isUser: true,
         id: Date.now(),
@@ -104,10 +102,8 @@ const Chatbot = () => {
       setIsLoading(true);
 
       try {
-        // 2. Subir archivo y obtener filename/session_id
+        // Subir archivo y obtener filename/session_id
         const response = await uploadSessionFileToBackend(file, selectedTool);
-
-        // --- VALIDACIÓN Y PARSEO ---
         let data;
         try {
           if (!response || !response.message) {
@@ -132,39 +128,41 @@ const Chatbot = () => {
         window.lastUploadedFile = processedFilename;
         window.lastSessionId = sessionId;
 
-        // 3. Si hay pregunta, enviar archivo + pregunta juntos al backend
+        // Enviar la pregunta y herramienta al backend si existe pregunta
         if (question) {
-          // Callback para mostrar respuesta en tiempo real
-          const onProgress = (partial) => {
+          let botMsgId2 = Date.now() + 2;
+          addMessage({ text: '', isUser: false, id: botMsgId2 });
+          try {
+            await sendMessageToBackend(question, processedFilename, selectedTool, sessionId, (partial) => {
+              setMessages(prev => prev.map(msg =>
+                msg.id === botMsgId2 ? { ...msg, text: partial } : msg
+              ));
+            });
+          } catch (error) {
             setMessages(prev => prev.map(msg =>
-              msg.id === botMsgId ? { ...msg, text: partial, isLoading: false } : msg
+              msg.id === botMsgId2 ? { ...msg, text: 'Lo siento, hubo un error al procesar tu mensaje.' } : msg
             ));
-          };
-
-          // Enviar mensaje al backend con archivo, pregunta y herramienta
-          await sendMessageToBackend(question, processedFilename, selectedTool, sessionId, onProgress);
-          setSelectedTool(null);
+          }
         } else {
-          // Si no hay pregunta, solo mostrar éxito
-          setMessages(prev => prev.map(msg =>
-            msg.id === botMsgId
-              ? {
-                  ...msg,
-                  text: '',
-                  isLoading: false,
-                  customSuccess: {
-                    processedFilename,
-                    selectedTool
-                  }
-                }
-              : msg
-          ));
-          if (selectedTool) setSelectedTool(null);
+          // Si no hay pregunta, solo notifica
+          if (showNotification) {
+            showNotification(`Archivo "${processedFilename}" procesado.`);
+          }
+          setMessages(prev => {
+            const filtered = prev.filter(msg => msg.id !== botMsgId);
+            return [
+              ...filtered,
+              {
+                text: 'Ahora ya puedes preguntar sobre el archivo subido.',
+                isUser: false,
+                id: `info-${processedFilename}-${Date.now()}`
+              }
+            ];
+          });
         }
         setIsLoading(false);
 
       } catch (error) {
-        // Error durante la SUBIDA del archivo o envío
         console.error('Error al subir archivo o enviar mensaje:', error);
         setMessages(prev => prev.map( msg =>
           msg.id === botMsgId
@@ -176,10 +174,15 @@ const Chatbot = () => {
     }
   };
 
+  // Detectar si el sidebar está abierto para ajustar el layout
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Pasar callback al Sidebar para actualizar el estado
+  const handleSidebarState = (isOpen) => setSidebarOpen(isOpen);
+
   return (
     <div className="chat-container">
-      <Sidebar onToolSelect={setSelectedTool} />
-      <main className="main-content">
+      <Sidebar onToolSelect={setSelectedTool} onSidebarState={handleSidebarState} />
+      <main className={`main-content${sidebarOpen ? '' : ' sidebar-closed'}`}>
         {messages.length === 0 ? (
           <div className="welcome-message">
             <h1>Hola,</h1>
@@ -189,22 +192,14 @@ const Chatbot = () => {
           <ChatMessages
             messages={messages}
             isLoading={isLoading}
-            renderCustomSuccess={(msg) => (
-              <div className="bot-message" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FaCheck style={{ color: '#27ae60', fontSize: 18 }} />
-                {msg.customSuccess.selectedTool
-                  ? `Archivo "${msg.customSuccess.processedFilename}" procesado. Se usará la herramienta ${msg.customSuccess.selectedTool.toLowerCase()}.`
-                  : `Archivo "${msg.customSuccess.processedFilename}" procesado. Ahora puedes preguntarme sobre él.`}
-              </div>
-            )}
           />
         )}
         <ChatInput
           value={input}
           onChange={e => setInput(e.target.value)}
-          onSend={handleSend} // Para enviar solo texto
+          onSend={handleSend}
           onFileChange={handleFileChange}
-          onSendFiles={handleSendFiles} // Para enviar archivos (con o sin texto)
+          onSendFiles={handleSendFiles}
           onClearFiles={setClearFiles}
           disabled={isLoading}
           selectedTool={selectedTool}

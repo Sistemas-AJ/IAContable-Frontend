@@ -1,25 +1,27 @@
 import React from 'react';
+import './ChatMessages.css'; // Importamos el nuevo archivo CSS
 import excelIcon from '../../../assets/excel.png';
 import wordIcon from '../../../assets/word.png';
 import pdfIcon from '../../../assets/pdf.png';
 import { formatBotMessage } from '../utils/formatBotMessage.jsx';
 
 // Íconos para cada tipo de archivo
+// Ahora usamos una clase CSS para darles estilo
 const fileIcons = {
   pdf: (
-    <img src={pdfIcon} alt="PDF" style={{ width: 28, height: 28, marginRight: 2 }} />
+    <img src={pdfIcon} alt="PDF" className="file-icon" />
   ),
   xls: (
-    <img src={excelIcon} alt="Excel" style={{ width: 28, height: 28, marginRight: 2 }} />
+    <img src={excelIcon} alt="Excel" className="file-icon" />
   ),
   xlsx: (
-    <img src={excelIcon} alt="Excel" style={{ width: 28, height: 28, marginRight: 2 }} />
+    <img src={excelIcon} alt="Excel" className="file-icon" />
   ),
   doc: (
-    <img src={wordIcon} alt="Word" style={{ width: 28, height: 28, marginRight: 2 }} />
+    <img src={wordIcon} alt="Word" className="file-icon" />
   ),
   docx: (
-    <img src={wordIcon} alt="Word" style={{ width: 28, height: 28, marginRight: 2 }} />
+    <img src={wordIcon} alt="Word" className="file-icon" />
   ),
 };
 
@@ -35,23 +37,22 @@ function renderFileMessage(msg, onDelete) {
   const type = getFileType(msg.fileName || msg.text);
   if (!type) return null;
   const fileName = msg.fileName || msg.text;
-  // Recortar nombre si es muy largo
+  
   const maxNameLength = 18;
   const shortName = fileName.length > maxNameLength
     ? fileName.slice(0, 15) + '...'
     : fileName;
   const ext = fileName.split('.').pop().toUpperCase();
+  
   return (
-    <div className="file-chip" style={{
-      display: 'flex', alignItems: 'center', background: '#F4F8FB', borderRadius: '20px', padding: '6px 12px', margin: '6px 0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', maxWidth: 260
-    }}>
-      <span style={{ marginRight: 8 }}>{fileIcons[type]}</span>
-      <a href={msg.fileUrl || '#'} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#1976D2', fontWeight: 'bold', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+    <div className="file-chip">
+      <span className="file-chip-icon">{fileIcons[type]}</span>
+      <a href={msg.fileUrl || '#'} target="_blank" rel="noopener noreferrer" className="file-chip-link">
         {shortName}
       </a>
-      <span style={{ margin: '0 8px', color: '#1976D2', fontWeight: 'bold' }}>{ext}</span>
+      <span className="file-chip-ext">{ext}</span>
       {onDelete && (
-        <button onClick={() => onDelete(msg)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1976D2', fontSize: 16, marginLeft: 4 }} title="Eliminar archivo">×</button>
+        <button onClick={() => onDelete(msg)} className="file-chip-delete" title="Eliminar archivo">×</button>
       )}
     </div>
   );
@@ -60,61 +61,63 @@ function renderFileMessage(msg, onDelete) {
 
 const ChatMessages = ({ messages, isLoading, renderCustomSuccess }) => (
   <div className="chat-messages">
-    {messages.map((msg) => {
-      const isFinancialAnalysis =
-        !msg.isUser && typeof msg.text === 'string' &&
-        (
-          msg.text.includes('Análisis de Ratios Financieros') ||
-          msg.text.includes('Balance General') ||
-          msg.text.includes('Estado de Resultados')
+    {messages
+      .filter(msg => {
+        // Filtra mensajes que solo son puntos, el texto de "Pensando..." o mensajes del bot vacíos
+        if (typeof msg.text === 'string') {
+          const txt = msg.text.trim();
+          if (txt === '' && !msg.isUser) return false; // Oculta mensajes vacíos del bot
+          if (txt === '.' || txt === '..' || txt === '...' || txt === '....' || txt === '.....') return false;
+          if (txt === '🧠 Pensando y buscando en mis conocimientos ...' || txt.startsWith('Pensando y buscando en mis conocimientos')) return false;
+        }
+        return true;
+      })
+      .map((msg) => {
+        const isFinancialAnalysis =
+          !msg.isUser && typeof msg.text === 'string' &&
+          (
+            msg.text.includes('Análisis de Ratios Financieros') ||
+            msg.text.includes('Balance General') ||
+            msg.text.includes('Estado de Resultados')
+          );
+
+        const fileType = getFileType(msg.fileName || (msg.file && msg.file.name) || msg.text);
+        const isFile = !!fileType;
+        const hasFileAndQuestion = msg.isUser && msg.file && msg.question;
+        const handleDelete = null;
+
+        return (
+          <div key={msg.id || msg.text} className={`message ${msg.isUser ? 'user' : 'bot'} ${msg.isLoading ? 'loading' : ''}`}>
+            {/* Eliminado indicador de carga por solicitud */}
+            {msg.customSuccess && renderCustomSuccess ? (
+              renderCustomSuccess(msg)
+            ) : hasFileAndQuestion ? (
+              // Mensaje de usuario con archivo + pregunta
+              <div className="user-message-compound">
+                {/* Línea archivo */}
+                <div className="user-message-file-line">
+                  <span className="user-message-file-icon">{fileIcons[fileType]}</span>
+                  <span className="user-message-file-name">{msg.file.name}</span>
+                  <span className="user-message-file-ext">{msg.file.name.split('.').pop().toUpperCase()}</span>
+                </div>
+                {/* Línea pregunta */}
+                <div className="user-message-question-line">
+                  {msg.question}
+                </div>
+              </div>
+            ) : (
+              // Otros tipos de mensajes
+              isFile
+                ? renderFileMessage(msg, handleDelete)
+                : msg.isUser
+                  ? <div className="user-message">{msg.text}</div>
+                  : isFinancialAnalysis
+                    ? <div className="chatbot-analysis bot-message">{formatBotMessage(msg.text, true)}</div>
+                    : <div className="bot-message">{formatBotMessage(msg.text)}</div>
+            )}
+          </div>
         );
-
-      // Detectar si el mensaje es un archivo
-      const fileType = getFileType(msg.fileName || (msg.file && msg.file.name) || msg.text);
-      const isFile = !!fileType;
-
-      // Mensaje del usuario con archivo y pregunta
-      const hasFileAndQuestion = msg.isUser && msg.file && msg.question;
-
-      // Puedes implementar la función de eliminar si lo necesitas
-      const handleDelete = null; // (msg) => { ... }
-      return (
-        <div key={msg.id || msg.text} className={`message ${msg.isUser ? 'user' : 'bot'} ${msg.isLoading ? 'loading' : ''}`}>
-          {msg.isLoading ? (
-            <div className="loading-indicator">
-              <div className="loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-          ) : msg.customSuccess && renderCustomSuccess ? (
-            renderCustomSuccess(msg)
-          ) : hasFileAndQuestion ? (
-            <div className="user-message" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-              {/* Línea archivo */}
-              <div style={{ display: 'flex', alignItems: 'center', background: '#F4F8FB', borderRadius: '20px', padding: '6px 12px', maxWidth: 260 }}>
-                <span style={{ marginRight: 8 }}>{fileIcons[fileType]}</span>
-                <span style={{ color: '#1976D2', fontWeight: 'bold' }}>{msg.file.name}</span>
-                <span style={{ marginLeft: 8, color: '#1976D2', fontWeight: 'bold' }}>{msg.file.name.split('.').pop().toUpperCase()}</span>
-              </div>
-              {/* Línea pregunta */}
-              <div style={{ marginTop: 2, background: '#eaf3ff', borderRadius: 12, padding: '8px 14px', color: '#222', fontSize: 15, maxWidth: 340 }}>
-                {msg.question}
-              </div>
-            </div>
-          ) : (
-            isFile
-              ? renderFileMessage(msg, handleDelete)
-              : msg.isUser
-                ? <div className="user-message">{msg.text}</div>
-                : isFinancialAnalysis
-                  ? <div className="chatbot-analysis bot-message">{formatBotMessage(msg.text, true)}</div>
-                  : <div className="bot-message">{formatBotMessage(msg.text)}</div>
-          )}
-        </div>
-      );
-    })}
+      })}
     {isLoading && (
       <div className="message bot loading">
         <div className="loading-indicator">
@@ -123,7 +126,10 @@ const ChatMessages = ({ messages, isLoading, renderCustomSuccess }) => (
             <span></span>
             <span></span>
           </div>
-          🧠 Pensando y buscando en mis conocimientos ...
+          {/* Envolvemos el texto en un span para poder darle estilo */}
+          <span className="loading-text">
+            🧠 Pensando y buscando en mis conocimientos ...
+          </span>
         </div>
       </div>
     )}

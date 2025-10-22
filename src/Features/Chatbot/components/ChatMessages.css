@@ -1,0 +1,293 @@
+/* Estilos para el contenedor principal */
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  overflow-y: auto;
+  height: 100%; /* Asegúrate de que tenga una altura definida para el scroll */
+}
+
+/* Estilos base para cada mensaje */
+.message {
+  margin-bottom: 10px;
+  max-width: 80%;
+}
+
+.message.user {
+  align-self: flex-end;
+}
+
+.message.bot {
+  align-self: flex-start;
+}
+
+/* Burbuja de mensaje de usuario (solo texto) */
+.user-message {
+  background: #eaf3ff;
+  border-radius: 12px;
+  padding: 8px 14px;
+  color: #222;
+  font-size: 15px;
+  word-wrap: break-word;
+}
+
+/* Burbuja de mensaje de bot (solo texto) */
+.bot-message {
+  background: #f1f1f1;
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #333;
+  word-wrap: break-word;
+}
+
+/* Estilo para los análisis financieros del bot */
+.chatbot-analysis {
+  max-width: 95%; /* Más ancho para tablas */
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- Estilos movidos desde ChatMessages.jsx --- */
+
+/* Estilo para los íconos de archivo en el objeto 'fileIcons' */
+.file-icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 2px;
+}
+
+/* Estilo para el componente 'renderFileMessage' (file-chip) */
+.file-chip {
+  display: flex;
+  align-items: center;
+  background: #F4F8FB;
+  border-radius: 20px;
+  padding: 6px 12px;
+  margin: 6px 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  max-width: 260px;
+}
+
+.file-chip-icon {
+  margin-right: 8px;
+}
+
+.file-chip-link {
+  text-decoration: none;
+  color: #1976D2;
+  font-weight: bold;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-chip-ext {
+  margin: 0 8px;
+  color: #1976D2;
+  font-weight: bold;
+}
+
+.file-chip-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1976D2;
+  font-size: 16px;
+  margin-left: 4px;
+}
+
+/* Estilos para el mensaje de usuario con archivo y pregunta */
+.user-message-compound {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.user-message-file-line {
+  display: flex;
+  align-items: center;
+  background: #F4F8FB;
+  border-radius: 20px;
+  padding: 6px 12px;
+  max-width: 260px;
+}
+
+.user-message-file-icon {
+  margin-right: 8px;
+}
+
+.user-message-file-name {
+  color: #1976D2;
+  font-weight: bold;
+}
+
+.user-message-file-ext {
+  margin-left: 8px;
+  color: #1976D2;
+  font-weight: bold;
+}
+
+.user-message-question-line {
+  margin-top: 2px;
+  background: #eaf3ff;
+  border-radius: 12px;
+  padding: 8px 14px;
+  color: #222;
+  font-size: 15px;
+  max-width: 340px;
+  word-wrap: break-word;
+}
+
+
+/* --- Estilos de Carga (Loading) --- */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.loading-text {
+  margin-left: 10px;
+  font-style: italic;
+  color: #cf5555;
+}
+
+.loading-dots span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #636161;
+  margin: 0 2px;
+  animation: loading-bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loading-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}
+
+/* --- ESTILOS movidos desde formatBotMessage.jsx --- */
+
+/* * --- REFACTORIZADO --- 
+ * Se define .bot-table-card como la clase base con todos los estilos comunes.
+ */
+.bot-table-card {
+  background: #f1f1f1;
+  border-radius: 12px;
+  padding: 18px 22px; /* Padding base */
+  margin: 12px 0;
+  width: 100%;
+  box-shadow: none;
+  display: block;
+  overflow-x: auto; /* Permite scroll horizontal */
+  border: none;
+}
+
+/* * --- REFACTORIZADO ---
+ * El selector específico ahora SOLO sobreescribe las propiedades que cambian.
+ * (padding y max-width) en lugar de repetir todo.
+ */
+.message.bot .bot-table-card {
+  padding: 18px 0px;
+  max-width: 100%;
+}
+
+/* Título de la tabla */
+.bot-table-title {
+  font-weight: bold;
+  font-size: 1.08em;
+  margin-bottom: 10px;
+  max-width: 80%;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+
+.bot-table {
+  /* Propiedades de bloque y scrolling */
+  display: block;
+  min-width: 600px;
+  max-width: none; /* Permite que la tabla crezca y active el scroll del card */
+  
+  /* Estilos de tabla */
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  overflow: hidden; /* Para que el border-radius funcione en las celdas */
+
+  /* Estilos visuales */
+  background: #fff;
+  color: #ff2626;
+  border-radius: 8px;
+  box-shadow: none; /* Se unificó a 'none' basado en la última definición */
+  font-size: 1em;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Estilos específicos para celdas de header (th) */
+.bot-table th {
+  font-weight: bold;
+  background: #e3eaf5;
+  font-size: 1.05em;
+  color: #e21616;
+  overflow-wrap: anywhere;
+  /* Nota: Faltaban 'padding' y 'text-align' comunes, 
+     quizás quieras añadirlos aquí o en una regla común para 'th, td' */
+}
+
+/* Estilos específicos para celdas de datos (td) */
+.bot-table td {
+  font-weight: normal;
+  font-size: 0.99em;
+  background: #fff;
+  color: #ca3e3e;
+  overflow-wrap: anywhere;
+  /* Nota: Faltaban 'padding' y 'text-align' comunes */
+}
+
+
+/* --- INICIO: Estilos para resaltar nombres de archivo --- */
+
+/* Usamos un color de texto oscuro y un fondo claro 
+  para asegurar buena legibilidad.
+*/
+
+.highlight-excel {
+  color: #1D6F42; /* Verde oscuro (texto) */
+  background-color: #E6F4EA; /* Verde claro (fondo) */
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.highlight-pdf {
+  color: #B32D2E; /* Rojo oscuro (texto) */
+  background-color: #FCE8E8; /* Rojo claro (fondo) */
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.highlight-word {
+  color: #2A5699; /* Azul oscuro (texto) */
+  background-color: #E8EFFC; /* Azul claro (fondo) */
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* --- FIN: Estilos para resaltar nombres de archivo --- */
