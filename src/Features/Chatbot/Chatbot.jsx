@@ -82,46 +82,44 @@ const Chatbot = () => {
 
     for (const file of files) {
       const fileMessage = {
-        text: `Archivo subido: ${file.name}`,
+        text: question
+          ? `Archivo subido: ${file.name}
+           + pregunta: "${question}"`
+          : `Archivo subido: ${file.name}`,
         isUser: true,
         id: Date.now(),
-        file: file
+        file: file,
+        question: question || undefined
       };
       addMessage(fileMessage);
 
       // ID único para el mensaje de carga
-      const loadingMessageId = `loading-${file.name}-${Date.now()}`;
+      const botMsgId = `loading-${file.name}-${Date.now()}`;
       addMessage({
-        text: `Procesando "${file.name}"...`,
+        text: '',
         isUser: false,
         isLoading: true,
-        id: loadingMessageId
+        id: botMsgId
       });
       setIsLoading(true);
 
       try {
-        // 2. Enviar archivo y herramienta (si existe)
+        // 2. Subir archivo y obtener filename/session_id
         const response = await uploadSessionFileToBackend(file, selectedTool);
 
-        // --- FIX 1: VALIDACIÓN Y PARSEO (NUEVO) ---
-        // El backend está devolviendo un JSON dentro de un string en la clave "message"
+        // --- VALIDACIÓN Y PARSEO ---
         let data;
         try {
-          // Primero, verificamos si 'response' y 'response.message' existen
           if (!response || !response.message) {
-             console.error("Respuesta del backend no tiene la clave 'message':", response);
-             throw new Error("Formato de respuesta inesperado del servidor.");
+            console.error("Respuesta del backend no tiene la clave 'message':", response);
+            throw new Error("Formato de respuesta inesperado del servidor.");
           }
-          
-          // Parseamos el string JSON que está en 'response.message'
           data = JSON.parse(response.message);
-
         } catch (e) {
           console.error("Error al parsear la respuesta del backend:", response.message, e);
           throw new Error("Error de formato en la respuesta del servidor.");
         }
 
-        // Ahora validamos el 'data' parseado
         if (!data || !data.filename || !data.session_id) {
           console.error("Respuesta inesperada del backend (después de parsear):", data);
           throw new Error("El servidor no devolvió la información del archivo procesado.");
@@ -130,79 +128,46 @@ const Chatbot = () => {
         const processedFilename = data.filename;
         const sessionId = data.session_id;
 
-        // 3. Mostrar mensaje de éxito
-        setMessages(prev => prev.map(msg =>
-          msg.id === loadingMessageId
-            ? {
-                ...msg,
-                text: '', // El texto lo pondremos en el render
-                isLoading: false,
-                customSuccess: {
-                  processedFilename,
-                  selectedTool
-                }
-              }
-            : msg
-        ));
-
         // Guardar datos del último archivo para futuras preguntas
         window.lastUploadedFile = processedFilename;
         window.lastSessionId = sessionId;
 
-        // --- FIX 2: LÓGICA DE ENVÍO DE PREGUNTA ---
-        
+        // 3. Si hay pregunta, enviar archivo + pregunta juntos al backend
         if (question) {
-          // 4. Si hay pregunta, la enviamos automáticamente
-          
-          const userQuestionMessage = { text: question, isUser: true, id: Date.now() + 1 };
-          addMessage(userQuestionMessage);
-          
-          const botMsgId = Date.now() + 2;
-          addMessage({ text: '', isUser: false, id: botMsgId });
-          
-          setIsLoading(true); // Aseguramos que siga cargando mientras responde
-
-          try {
-            // Callback para streaming (onProgress)
-            const onProgress = (partial) => {
-              setMessages(prev => prev.map(msg =>
-                msg.id === botMsgId ? { ...msg, text: partial } : msg
-              ));
-            };
-
-            // Enviar la pregunta
-            await sendMessageToBackend(question, processedFilename, selectedTool, sessionId, onProgress);
-            
-            setSelectedTool(null); // Limpiar la herramienta
-
-          } catch (error) {
-            console.error('Error al procesar la pregunta:', error);
+          // Callback para mostrar respuesta en tiempo real
+          const onProgress = (partial) => {
             setMessages(prev => prev.map(msg =>
-              msg.id === botMsgId ? { ...msg, text: 'Lo siento, hubo un error al procesar tu pregunta.' } : msg
+              msg.id === botMsgId ? { ...msg, text: partial, isLoading: false } : msg
             ));
-          } finally {
-            setIsLoading(false); // Terminar carga (pregunta)
-          }
-
-        } else if (selectedTool) {
-          // 5. Si NO hay pregunta, PERO SÍ hay herramienta
-          const askMessage = {
-            text: `¿Qué deseas hacer con el archivo "${processedFilename}" usando la herramienta "${selectedTool}"?`,
-            isUser: false,
-            id: Date.now() + 3
           };
-          addMessage(askMessage);
-          setIsLoading(false); // Terminar carga (solo subida)
+
+          // Enviar mensaje al backend con archivo, pregunta y herramienta
+          await sendMessageToBackend(question, processedFilename, selectedTool, sessionId, onProgress);
+          setSelectedTool(null);
         } else {
-          // 6. Si NO hay pregunta NI herramienta
-          setIsLoading(false);
+          // Si no hay pregunta, solo mostrar éxito
+          setMessages(prev => prev.map(msg =>
+            msg.id === botMsgId
+              ? {
+                  ...msg,
+                  text: '',
+                  isLoading: false,
+                  customSuccess: {
+                    processedFilename,
+                    selectedTool
+                  }
+                }
+              : msg
+          ));
+          if (selectedTool) setSelectedTool(null);
         }
+        setIsLoading(false);
 
       } catch (error) {
-        // Error durante la SUBIDA del archivo
-        console.error('Error al subir archivo:', error);
+        // Error durante la SUBIDA del archivo o envío
+        console.error('Error al subir archivo o enviar mensaje:', error);
         setMessages(prev => prev.map( msg =>
-          msg.id === loadingMessageId
+          msg.id === botMsgId
             ? { ...msg, text: ` Error al procesar el archivo: ${error.message || 'Inténtalo de nuevo.'}`, isLoading: false }
             : msg
         ));

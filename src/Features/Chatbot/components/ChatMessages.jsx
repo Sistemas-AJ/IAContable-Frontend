@@ -70,8 +70,11 @@ const ChatMessages = ({ messages, isLoading, renderCustomSuccess }) => (
         );
 
       // Detectar si el mensaje es un archivo
-      const fileType = getFileType(msg.fileName || msg.text);
+      const fileType = getFileType(msg.fileName || (msg.file && msg.file.name) || msg.text);
       const isFile = !!fileType;
+
+      // Mensaje del usuario con archivo y pregunta
+      const hasFileAndQuestion = msg.isUser && msg.file && msg.question;
 
       // Puedes implementar la función de eliminar si lo necesitas
       const handleDelete = null; // (msg) => { ... }
@@ -87,6 +90,19 @@ const ChatMessages = ({ messages, isLoading, renderCustomSuccess }) => (
             </div>
           ) : msg.customSuccess && renderCustomSuccess ? (
             renderCustomSuccess(msg)
+          ) : hasFileAndQuestion ? (
+            <div className="user-message" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+              {/* Línea archivo */}
+              <div style={{ display: 'flex', alignItems: 'center', background: '#F4F8FB', borderRadius: '20px', padding: '6px 12px', maxWidth: 260 }}>
+                <span style={{ marginRight: 8 }}>{fileIcons[fileType]}</span>
+                <span style={{ color: '#1976D2', fontWeight: 'bold' }}>{msg.file.name}</span>
+                <span style={{ marginLeft: 8, color: '#1976D2', fontWeight: 'bold' }}>{msg.file.name.split('.').pop().toUpperCase()}</span>
+              </div>
+              {/* Línea pregunta */}
+              <div style={{ marginTop: 2, background: '#eaf3ff', borderRadius: 12, padding: '8px 14px', color: '#222', fontSize: 15, maxWidth: 340 }}>
+                {msg.question}
+              </div>
+            </div>
           ) : (
             isFile
               ? renderFileMessage(msg, handleDelete)
