@@ -1,15 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 
 export function useChatMessages() {
   const [messages, setMessages] = useState([]);
   const clearFilesRef = useRef(null);
 
-  // Agrega mensaje y mantiene solo los últimos 10
+  // Agrega mensaje y mantiene el historial completo
   const addMessage = (message) => {
-    setMessages(prev => {
-      const newMessages = [...prev, message];
-      return newMessages.length > 10 ? newMessages.slice(-10) : newMessages;
-    });
+    setMessages((prev) => [...prev, message]);
   };
 
   // Permite setear función para limpiar archivos
@@ -22,6 +19,6 @@ export function useChatMessages() {
     setMessages,
     addMessage,
     clearFilesRef,
-    setClearFiles
+    setClearFiles,
   };
 }
