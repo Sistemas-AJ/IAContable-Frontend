@@ -2,16 +2,16 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw'; // <-- 1. IMPORTAR rehype-raw
+import rehypeRaw from 'rehype-raw'; 
+import * as XLSX from 'xlsx'; // Importamos la biblioteca
 import '../components/ChatMessages.css';
 
-// --- 2. DEFINIR EXPRESIONES REGULARES ---
-// Busca texto entre comillas simples que termine en una extensión de archivo
+// --- Expresiones regulares (Sin cambios) ---
 const excelRegex = /'[^']+\.(xlsx|xls)'/gi;
 const pdfRegex = /'[^']+\.pdf'/gi;
 const wordRegex = /'[^']+\.(docx|doc)'/gi;
 
-// Función para aplicar el resaltado
+// --- Función applyHighlight (Sin cambios) ---
 function applyHighlight(text) {
   if (!text) return text;
   return text
@@ -19,6 +19,84 @@ function applyHighlight(text) {
     .replace(pdfRegex, '<span class="highlight-pdf">$&</span>')
     .replace(wordRegex, '<span class="highlight-word">$&</span>');
 }
+
+// --- ¡INICIO: FUNCIÓN DE DESCARGA CON ESTILOS SIMPLIFICADOS! ---
+/**
+ * Crea y descarga un archivo Excel con formato "Tabla" (filtros, bandas de color).
+ * @param {Array<Array<string>>} data - Array de filas (donde la primera fila es el encabezado).
+ * @param {string} fileName - Nombre del archivo a descargar (ej. "reporte.xlsx").
+ */
+const handleDownloadExcel = (data, fileName = 'tabla.xlsx') => {
+  try {
+    // 1. Crear la Hoja de Trabajo (Worksheet)
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // 2. Calcular anchos de columna (Sin cambios)
+    const colWidths = data[0].map((_, i) => {
+      let maxLength = 0;
+      data.forEach(row => {
+        const cellContent = row[i];
+        if (cellContent) {
+          const contentLength = String(cellContent).length;
+          if (contentLength > maxLength) {
+            maxLength = contentLength;
+          }
+        }
+      });
+      return { wch: maxLength + 2 };
+    });
+    ws['!cols'] = colWidths;
+
+    // --- ¡INICIO: SECCIÓN DE ESTILOS SIMPLIFICADA! ---
+    // Eliminamos los bordes, que parecen ser la causa del error.
+
+    // Estilo para el Encabezado (Azul)
+    const headerStyle = {
+      font: { bold: true },
+      fill: { patternType: "solid", fgColor: { rgb: "E2EAF5" } }, // Fondo azul claro
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+
+    // Estilo para Fila Par (Gris claro)
+    const cellStyleEven = {
+      fill: { patternType: "solid", fgColor: { rgb: "F5F5F5" } } // Fondo gris muy claro
+    };
+
+    // 4. Aplicar los estilos a CADA celda
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) { // R = Fila
+      for (let C = range.s.c; C <= range.e.c; ++C) { // C = Columna
+        
+        const cell_address = XLSX.utils.encode_cell({ c: C, r: R });
+        const cell = ws[cell_address];
+        if (!cell) continue;
+
+        if (R === 0) { // Fila 0 es el encabezado
+          cell.s = headerStyle;
+        } else if (R % 2 === 0) { // Fila par
+          cell.s = cellStyleEven;
+        }
+        // No aplicamos estilo a las filas impares (se quedan blancas)
+      }
+    }
+    // --- ¡FIN: SECCIÓN DE ESTILOS SIMPLIFICADA! ---
+
+    // 5. AÑADIR EL AUTOFILTRO DE TABLA (Esto ya funcionaba)
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+
+    // 6. Crear el Libro de Trabajo (Workbook) y añadir la hoja
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+
+    // 7. Disparar la descarga
+    XLSX.writeFile(wb, fileName);
+
+  } catch (error) {
+    console.error("Error al generar el archivo Excel:", error);
+  }
+};
+// --- ¡FIN: FUNCIÓN DE DESCARGA CON ESTILOS SIMPLIFICADOS! ---
+
 
 export function formatBotMessage(text) {
   if (!text) return null;
@@ -35,6 +113,17 @@ export function formatBotMessage(text) {
     // Detectar inicio de bloque de tabla
     if (lines[i].includes('|')) {
       let tablaLines = [];
+      
+      // --- Lógica de Título (Sin cambios) ---
+      let title = '';
+      if (i > 0 && lines[i-1] && !lines[i-1].includes('|') && lines[i-1].trim().length > 0) {
+        title = lines[i-1].replace(/\*\*/g, '').trim();
+        if (elements.length > 0) {
+          elements.pop(); 
+        }
+      }
+      // --- Fin Lógica de Título ---
+
       // Mientras las siguientes líneas tengan pipes, es parte de la tabla
       while (i < lines.length && lines[i].includes('|')) {
         tablaLines.push(lines[i]);
@@ -46,11 +135,24 @@ export function formatBotMessage(text) {
         const tablaData = tablaLines.map(row =>
           row
             .split('|')
-            .map(cell => cell.trim().replace(/-+/g, '').replace(/\*\*/g, '').trim()) // Elimina '**' de cada celda
+            .map(cell => cell.trim().replace(/-+/g, '').replace(/\*\*/g, '').trim()) 
             .filter(cell => cell.length > 0)
         );
+
+        // --- Renderizado de Tabla (Sin cambios) ---
         elements.push(
           <div key={`table-card-${i}`} className="bot-table-card">
+            
+            <div className="bot-table-header-controls">
+              {title && <h3 className="bot-table-title">{title}</h3>}
+              <button 
+                className="bot-table-download-btn" 
+                onClick={() => handleDownloadExcel(tablaData, `${title.replace(/ /g, '_') || 'reporte'}.xlsx`)}
+              >
+                Descargar Excel
+              </button>
+            </div>
+
             <table className="bot-table">
               <thead>
                 <tr>
@@ -73,16 +175,16 @@ export function formatBotMessage(text) {
             </table>
           </div>
         );
+        // --- Fin Renderizado de Tabla ---
         continue;
       } else {
         // Si solo es una línea con pipes, mostrar como texto normal
-        // --- 3. APLICAR RESALTADO AQUÍ ---
         let blockText = applyHighlight(tablaLines.join('\n'));
         elements.push(
           <ReactMarkdown 
             key={`md-${i}`} 
             remarkPlugins={[remarkMath]} 
-            rehypePlugins={[rehypeKatex, rehypeRaw]} // <-- 4. AÑADIR rehypeRaw
+            rehypePlugins={[rehypeKatex, rehypeRaw]} 
           >
             {blockText}
           </ReactMarkdown>
@@ -94,13 +196,12 @@ export function formatBotMessage(text) {
     // Si no es tabla, mostrar como Markdown normal
     let block = lines[i];
     if (block.trim().length > 0) {
-      // --- 5. APLICAR RESALTADO AQUÍ TAMBIÉN ---
       block = applyHighlight(block);
       elements.push(
         <ReactMarkdown 
           key={`md-block-${i}`} 
           remarkPlugins={[remarkMath]} 
-          rehypePlugins={[rehypeKatex, rehypeRaw]} // <-- 6. AÑADIR rehypeRaw
+          rehypePlugins={[rehypeKatex, rehypeRaw]} 
         >
           {block}
         </ReactMarkdown>
@@ -113,25 +214,13 @@ export function formatBotMessage(text) {
     return <>{elements}</>;
   }
 
-  // --- El resto de tu código (correcciones de LaTeX) parece no alcanzarse
-  //     debido a la lógica del bucle 'while' que siempre retorna 'elements'.
-  //     Si ese código es necesario, la estructura de esta función debe revisarse.
-
-  // ... (código de correcciones LaTeX sin cambios) ...
-
-  // --- ... (código de correcciones LaTeX sin cambios) ...
-
-  // --- !!! NUEVA CORRECCIÓN IMPORTANTE !!! ---
-  // ... (código de correcciones LaTeX sin cambios) ...
-  // --- FIN DE NUEVA CORRECCIÓN ---
-
-  // --- 7. APLICAR RESALTADO Y REHYPE-RAW AL 'FALLBACK' FINAL ---
+  // --- Fallback final (Sin cambios) ---
   cleanText = applyHighlight(cleanText);
 
   return (
     <ReactMarkdown
       remarkPlugins={[remarkMath]}
-      rehypePlugins={[rehypeKatex, rehypeRaw]} // <-- 8. AÑADIR rehypeRaw
+      rehypePlugins={[rehypeKatex, rehypeRaw]} 
     >
       {cleanText}
     </ReactMarkdown>

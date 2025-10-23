@@ -245,6 +245,7 @@
   margin-bottom: 10px;
   max-width: 80%;
   font-family: 'Segoe UI', sans-serif;
+  color: #333; /* Añadido para mejor legibilidad */
 }
 
 
@@ -323,3 +324,55 @@
 }
 
 /* --- FIN: Estilos para resaltar nombres de archivo --- */
+
+
+/* --- INICIO: NUEVOS ESTILOS PARA TÍTULO Y BOTÓN DE DESCARGA --- */
+
+/* Contenedor para el título y el botón */
+.bot-table-header-controls {
+  display: flex;
+  justify-content: space-between; /* Título a la izq, botón a la der */
+  align-items: center;
+  /* El padding de .bot-table-card (18px 0px en .message.bot) maneja el espacio vertical.
+    Añadimos padding horizontal y bottom para separar del borde y de la tabla.
+  */
+  padding: 0 12px 12px 12px;
+  min-width: 600px; /* Para que coincida con el min-width de la tabla */
+  box-sizing: border-box; /* Para que el padding no sume al min-width */
+}
+
+/* Ajuste al título existente cuando está dentro del nuevo contenedor */
+.bot-table-header-controls .bot-table-title {
+  margin-bottom: 0; /* El contenedor ya tiene padding-bottom */
+  margin-right: 16px; /* Espacio entre título y botón */
+  max-width: none; /* Dejamos que flexbox maneje el ancho */
+  flex-grow: 1; /* El título toma el espacio disponible */
+  color: #333; /* Aseguramos un color legible */
+}
+
+/* Estilo del botón de descarga */
+.bot-table-download-btn {
+  background-color: #1D6F42; /* Verde Excel */
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: 'Segoe UI', sans-serif;
+  flex-shrink: 0; /* Evita que el botón se encoja */
+  white-space: nowrap; /* Evita que el texto del botón se parta */
+}
+
+.bot-table-download-btn:hover {
+  background-color: #175733;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.bot-table-download-btn:active {
+  background-color: #124026;
+}
+
+/* --- FIN: NUEVOS ESTILOS PARA DESCARGA DE TABLA --- */

@@ -8,7 +8,9 @@
     vertical-align: middle;
 }
 .file-icon-pdf {
-    color: #e74c3c;
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
 }
 .file-icon-excel {
     width: 28px;

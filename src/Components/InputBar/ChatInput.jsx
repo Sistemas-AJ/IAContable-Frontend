@@ -6,6 +6,7 @@ import './ChatInput.css';
 import './MicButton.css';
 import excelIcon from '../../assets/excel.png';
 import wordIcon from '../../assets/word.png';
+import pdfIcon from '../../assets/pdf.png';
 
 
 const fileIcon = (file) => {
@@ -17,7 +18,7 @@ const fileIcon = (file) => {
     );
   } else if (file.type === 'application/pdf') {
     return (
-  <span role="img" aria-label="PDF" className="file-icon-pdf">📄</span>
+    <img src={pdfIcon} alt="PDF" className="file-icon-pdf" />
     );
   } else if (ext === 'xlsx' || ext === 'xls') {
     return (
