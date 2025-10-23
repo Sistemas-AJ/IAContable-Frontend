@@ -24,6 +24,7 @@ const UploadButton = ({ onFileChange, disabled = false, resetTrigger }) => {
         style={{ display: 'none' }}
         onChange={onFileChange}
         disabled={disabled}
+        multiple={false}
       />
     </label>
   );

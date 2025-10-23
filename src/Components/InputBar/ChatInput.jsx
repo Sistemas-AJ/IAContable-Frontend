@@ -46,24 +46,26 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [fileResetKey, setFileResetKey] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+  const textareaRef = React.useRef(null);
 
   // Función para actualizar el input con la transcripción
   const handleTranscript = (transcript) => {
     onChange({ target: { value: transcript } });
   };
 
+  // Autoajustar altura del textarea
+  React.useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [value]);
+
   // Permitir múltiples archivos y acumularlos en el estado
-  const addFiles = (files) => {
-    setSelectedFiles(prevFiles => {
-      // Evitar duplicados por nombre y tamaño
-      const allFiles = [...prevFiles];
-      files.forEach(newFile => {
-        if (!allFiles.some(f => f.name === newFile.name && f.size === newFile.size)) {
-          allFiles.push(newFile);
-        }
-      });
-      return allFiles;
-    });
+    const addFiles = (files) => {
+      if (files.length > 0) {
+        setSelectedFiles([files[0]]); // Solo permite un archivo a la vez
+      }
   };
 
   const handleFileChange = (e) => {
@@ -130,6 +132,7 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      style={{ position: 'relative' }}
     >
       {/* Herramienta seleccionada (solo mostrar, no seleccionar aquí) */}
       {selectedTool && (
@@ -141,25 +144,24 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
         </div>
       )}
       {/* Vista previa de archivos */}
-      {selectedFiles.length > 0 && (
-        <div className="file-preview-list">
-          {selectedFiles.map((file, idx) => (
-            <div className="file-preview-item" key={idx}>
-              {fileIcon(file)}
-              <span className="file-preview-name" title={file.name}>
-                {file.name}
+        {selectedFiles.length > 0 && (
+          <div className="file-preview-list">
+            <div className="file-preview-item" key={0}>
+              {fileIcon(selectedFiles[0])}
+              <span className="file-preview-name" title={selectedFiles[0].name}>
+                {selectedFiles[0].name}
               </span>
               <span className="file-preview-type">
-                {file.name.split('.').pop()?.toUpperCase() || 'ARCHIVO'}
+                {selectedFiles[0].name.split('.').pop()?.toUpperCase() || 'ARCHIVO'}
               </span>
-              <button className="file-remove-btn" onClick={() => handleRemoveFile(idx)} title="Eliminar archivo">✖</button>
+              <button className="file-remove-btn" onClick={() => handleRemoveFile(0)} title="Eliminar archivo">✖</button>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
       <div className="chat-input-row">
         <UploadButton onFileChange={handleFileChange} disabled={disabled} resetTrigger={fileResetKey} />
         <textarea
+          ref={textareaRef}
           className="chat-textarea"
           placeholder={selectedTool ? `Sube un archivo Excel para ${selectedTool.toLowerCase()}...` : "Escribe un mensaje..."}
           value={value}
@@ -167,6 +169,7 @@ const ChatInput = ({ value, onChange, onSend, onFileChange, disabled = false, on
           rows={1}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && !disabled && handleSend()}
           disabled={disabled}
+          style={{ resize: 'none', overflowY: 'auto' }}
         />
         <div className="chat-input-buttons">
           <MicButton onTranscript={handleTranscript} disabled={disabled} />

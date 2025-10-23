@@ -1,3 +1,26 @@
+/* Ajuste de ancho para la columna 'Valor' en tablas del bot */
+.bot-table th:nth-child(2),
+.bot-table td:nth-child(2) {
+  width: 90px;
+  min-width: 70px;
+  max-width: 110px;
+  text-align: center;
+  white-space: nowrap;
+}
+/* Fila para mensaje bot con imagen a la izquierda */
+.bot-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.bot-logo {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0;
+  display: block;
+  flex-shrink: 0;
+}
 /* Estilos para el contenedor principal */
 .chat-messages {
   display: flex;
@@ -35,9 +58,12 @@
 .bot-message {
   background: #f1f1f1;
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 16px 22px; /* Aumenta el padding para hacer el cuadro más grande */
   color: #333;
   word-wrap: break-word;
+  font-size: 17px; /* Opcional: texto ligeramente más grande */
+  min-width: 320px; /* Opcional: ancho mínimo más grande */
+  max-width: 90%; /* Permite que el cuadro sea más ancho */
 }
 
 /* Estilo para los análisis financieros del bot */
@@ -111,6 +137,7 @@
   border-radius: 20px;
   padding: 6px 12px;
   max-width: 260px;
+  justify-content: flex-start;
 }
 
 .user-message-file-icon {
@@ -120,12 +147,17 @@
 .user-message-file-name {
   color: #1976D2;
   font-weight: bold;
+  text-align: left;
+  display: inline-block;
+  margin-right: 4px;
 }
 
 .user-message-file-ext {
-  margin-left: 8px;
+  margin-left: 4px;
   color: #1976D2;
   font-weight: bold;
+  text-align: left;
+  display: inline-block;
 }
 
 .user-message-question-line {

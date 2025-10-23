@@ -46,12 +46,10 @@ const Chatbot = ({ showNotification }) => {
 
       if (filename && tool && session_id) {
         await sendMessageToBackend(userMessage.text, filename, tool, session_id, onProgress);
-        setSelectedTool(null);
       } else if (filename && session_id) {
         await sendMessageToBackend(userMessage.text, filename, null, session_id, onProgress);
       } else {
         await sendMessageToBackend(userMessage.text, null, tool, null, onProgress);
-        setSelectedTool(null);
       }
     } catch (error) {
       console.error('Error al enviar mensaje:', error);

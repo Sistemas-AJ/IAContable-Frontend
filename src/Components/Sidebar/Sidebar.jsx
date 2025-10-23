@@ -44,15 +44,28 @@ const Sidebar = ({ onToolSelect, onSidebarState }) => {
   }, [isOpen, onSidebarState]);
 
   return (
-    <aside className={`sidebar${isOpen ? ' open' : ' closed'}`}>
-      <div className="sidebar-header">
-        <img src={logo} alt="Logo IA Contable" className="sidebar-logo" />
-        <span className="gemini-logo">IA Contable</span>
-      </div>
-      <div className="sidebar-tools">
-        <ToolsDropdown onSelect={onToolSelect} />
-      </div>
-    </aside>
+    <>
+      {/* Sidebar principal */}
+      <aside className={`sidebar${isOpen ? ' open' : ' closed'}`}>
+        <div className="sidebar-header">
+          <img src={logo} alt="Logo IA Contable" className="sidebar-logo" />
+          <span className="gemini-logo">IA Contable</span>
+        </div>
+        <div className="sidebar-tools">
+          <ToolsDropdown onSelect={onToolSelect} />
+        </div>
+      </aside>
+      {/* Logo y nombre Alixter cuando el sidebar está oculto */}
+      {!isOpen && (
+        <div className="sidebar-mini">
+          <img src={logo} alt="Logo Alixter" className="sidebar-mini-logo" />
+          <span className="sidebar-mini-text">
+            <span>IA</span>
+            <span>Contable</span>
+          </span>
+        </div>
+      )}
+    </>
   );
 };
 

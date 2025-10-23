@@ -110,6 +110,7 @@
     resize: none;
     overflow-y: auto;
     box-sizing: border-box;
+    font-family: 'Segoe UI', 'SegoeUI', Arial, sans-serif !important;
     /* Oculta la barra de scroll en todos los navegadores */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE y Edge */
