@@ -1,13 +1,35 @@
 import Sidebar from '../../Components/Sidebar/Sidebar';
 import ChatInput from '../../Components/InputBar/ChatInput';
 import './Chatbot.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useChatMessages } from './hooks/useChatMessages';
 import { sendMessageToBackend, uploadSessionFileToBackend } from '../../services/chatService';
 import ChatMessages from './components/ChatMessages';
 import { FaCheck } from "react-icons/fa";
 
 const Chatbot = ({ showNotification }) => {
+  // Detectar recarga y limpiar session_id, mostrar notificación
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Mostrar mensaje de advertencia
+      if (window.lastSessionId) {
+        // Mostramos notificación visual si existe showNotification
+        if (showNotification) {
+          showNotification('Se borrará tu conversación actual.');
+        }
+        window.lastSessionId = null;
+        window.lastUploadedFile = null;
+      }
+      // Mensaje nativo del navegador
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [showNotification]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTool, setSelectedTool] = useState(null);
@@ -100,8 +122,9 @@ const Chatbot = ({ showNotification }) => {
       setIsLoading(true);
 
       try {
-        // Subir archivo y obtener filename/session_id
-        const response = await uploadSessionFileToBackend(file, selectedTool);
+
+  // Subir archivo y obtener filename/session_id (session_id se envía automáticamente si existe)
+  const response = await uploadSessionFileToBackend(file, selectedTool);
         let data;
         try {
           if (!response || !response.message) {
@@ -122,9 +145,11 @@ const Chatbot = ({ showNotification }) => {
         const processedFilename = data.filename;
         const sessionId = data.session_id;
 
-        // Guardar datos del último archivo para futuras preguntas
+        // Guardar session_id solo si no existe uno (inicio de conversación)
+        if (!window.lastSessionId) {
+          window.lastSessionId = sessionId;
+        }
         window.lastUploadedFile = processedFilename;
-        window.lastSessionId = sessionId;
 
         // Enviar la pregunta y herramienta al backend si existe pregunta
         if (question) {

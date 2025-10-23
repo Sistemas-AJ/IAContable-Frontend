@@ -20,21 +20,25 @@ function applyHighlight(text) {
     .replace(wordRegex, '<span class="highlight-word">$&</span>');
 }
 
-// --- ¡INICIO: FUNCIÓN DE DESCARGA CON ESTILOS SIMPLIFICADOS! ---
+// --- ¡INICIO: FUNCIÓN DE DESCARGA TOTALMENTE NUEVA Y MEJORADA! ---
 /**
- * Crea y descarga un archivo Excel con formato "Tabla" (filtros, bandas de color).
+ * Crea y descarga un archivo Excel con estilos de tabla profesionales (color, bordes, etc.)
  * @param {Array<Array<string>>} data - Array de filas (donde la primera fila es el encabezado).
  * @param {string} fileName - Nombre del archivo a descargar (ej. "reporte.xlsx").
  */
 const handleDownloadExcel = (data, fileName = 'tabla.xlsx') => {
   try {
-    // 1. Crear la Hoja de Trabajo (Worksheet)
+    // 1. Ya tenemos los datos como Array-de-Arrays (AoA).
+    const headers = data[0];
+    const dataRows = data.slice(1);
+
+    // 2. Crear la Hoja de Trabajo (Worksheet) directamente desde el AoA
     const ws = XLSX.utils.aoa_to_sheet(data);
 
-    // 2. Calcular anchos de columna (Sin cambios)
-    const colWidths = data[0].map((_, i) => {
-      let maxLength = 0;
-      data.forEach(row => {
+    // 3. Calcular anchos de columna (esta lógica es la misma de antes y es correcta)
+    const colWidths = headers.map((header, i) => {
+      let maxLength = header ? String(header).length : 10;
+      dataRows.forEach(row => {
         const cellContent = row[i];
         if (cellContent) {
           const contentLength = String(cellContent).length;
@@ -43,46 +47,50 @@ const handleDownloadExcel = (data, fileName = 'tabla.xlsx') => {
           }
         }
       });
-      return { wch: maxLength + 2 };
+      return { wch: maxLength + 2 }; // {wch: width_in_characters}
     });
-    ws['!cols'] = colWidths;
+    ws['!cols'] = colWidths; // Aplicar los anchos calculados
 
-    // --- ¡INICIO: SECCIÓN DE ESTILOS SIMPLIFICADA! ---
-    // Eliminamos los bordes, que parecen ser la causa del error.
+    // --- INICIO: SECCIÓN DE ESTILOS PROFESIONALES ---
 
-    // Estilo para el Encabezado (Azul)
+    // 4. Definir los estilos
+    const border = {
+      top: { style: "thin", color: { rgb: "000000" } },
+      bottom: { style: "thin", color: { rgb: "000000" } },
+      left: { style: "thin", color: { rgb: "000000" } },
+      right: { style: "thin", color: { rgb: "000000" } }
+    };
+
     const headerStyle = {
-      font: { bold: true },
-      fill: { patternType: "solid", fgColor: { rgb: "E2EAF5" } }, // Fondo azul claro
-      alignment: { horizontal: "center", vertical: "center" }
+      font: { bold: true, color: { rgb: "000000" } }, // Letra negra en negrita
+      fill: { patternType: "solid", fgColor: { rgb: "E2EAF5" } }, // Fondo azul claro (puedes cambiar este RGB)
+      border: border,
+      alignment: { horizontal: "center", vertical: "center" } // Centrado
     };
 
-    // Estilo para Fila Par (Gris claro)
-    const cellStyleEven = {
-      fill: { patternType: "solid", fgColor: { rgb: "F5F5F5" } } // Fondo gris muy claro
+    const cellStyle = {
+      border: border,
+      alignment: { vertical: "center" } // Solo centrado vertical
     };
 
-    // 4. Aplicar los estilos a CADA celda
+    // 5. Aplicar los estilos a CADA celda
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let R = range.s.r; R <= range.e.r; ++R) { // R = Fila
       for (let C = range.s.c; C <= range.e.c; ++C) { // C = Columna
         
         const cell_address = XLSX.utils.encode_cell({ c: C, r: R });
         const cell = ws[cell_address];
-        if (!cell) continue;
+
+        if (!cell) continue; // Omitir si la celda no existe
 
         if (R === 0) { // Fila 0 es el encabezado
           cell.s = headerStyle;
-        } else if (R % 2 === 0) { // Fila par
-          cell.s = cellStyleEven;
+        } else { // El resto son celdas de datos
+          cell.s = cellStyle;
         }
-        // No aplicamos estilo a las filas impares (se quedan blancas)
       }
     }
-    // --- ¡FIN: SECCIÓN DE ESTILOS SIMPLIFICADA! ---
-
-    // 5. AÑADIR EL AUTOFILTRO DE TABLA (Esto ya funcionaba)
-    ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+    // --- FIN: SECCIÓN DE ESTILOS PROFESIONALES ---
 
     // 6. Crear el Libro de Trabajo (Workbook) y añadir la hoja
     const wb = XLSX.utils.book_new();
@@ -95,7 +103,7 @@ const handleDownloadExcel = (data, fileName = 'tabla.xlsx') => {
     console.error("Error al generar el archivo Excel:", error);
   }
 };
-// --- ¡FIN: FUNCIÓN DE DESCARGA CON ESTILOS SIMPLIFICADOS! ---
+// --- ¡FIN: FUNCIÓN DE DESCARGA TOTALMENTE NUEVA Y MEJORADA! ---
 
 
 export function formatBotMessage(text) {

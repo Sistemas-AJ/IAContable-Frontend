@@ -81,13 +81,19 @@ export async function sendMessageToBackend(message, filename = null, tool = null
 /**
  * Subir archivo de sesión al backend
  * @param {File} file
- * @param {string|null} session_id
+ * @param {string|null} tool
  * @returns {Promise<any>}
  */
-export async function uploadSessionFileToBackend(file, session_id = null) {
+export async function uploadSessionFileToBackend(file, tool = null) {
   const formData = new FormData();
   formData.append('file', file);
-  if (session_id) formData.append('session_id', session_id);
+  // Enviar el session_id actual si existe
+  if (window.lastSessionId) {
+    formData.append('session_id', window.lastSessionId);
+  }
+  if (tool) {
+    formData.append('tool', tool);
+  }
   try {
     // Usar fetch para poder leer texto plano fácilmente
     const response = await fetch(`${API_BASE}/session/upload`, {
