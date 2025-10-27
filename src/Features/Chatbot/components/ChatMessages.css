@@ -1,12 +1,5 @@
 /* Ajuste de ancho para la columna 'Valor' en tablas del bot */
-.bot-table th:nth-child(2),
-.bot-table td:nth-child(2) {
-  width: 90px;
-  min-width: 70px;
-  max-width: 110px;
-  text-align: center;
-  white-space: nowrap;
-}
+
 /* Fila para mensaje bot con imagen a la izquierda */
 .bot-row {
   display: flex;
@@ -250,25 +243,17 @@
 
 
 .bot-table {
-  /* Propiedades de bloque y scrolling */
-  display: block;
-  min-width: 600px;
-  max-width: none; /* Permite que la tabla crezca y active el scroll del card */
-  
-  /* Estilos de tabla */
+  display: table;
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
-  overflow: hidden; /* Para que el border-radius funcione en las celdas */
-
-  /* Estilos visuales */
   background: #fff;
   color: #ff2626;
   border-radius: 8px;
-  box-shadow: none; /* Se unificó a 'none' basado en la última definición */
+  box-shadow: none;
   font-size: 1em;
   font-family: 'Segoe UI', sans-serif;
+  overflow-x: auto;
 }
 
 /* Estilos específicos para celdas de header (th) */

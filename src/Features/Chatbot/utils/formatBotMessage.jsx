@@ -139,14 +139,28 @@ export function formatBotMessage(text) {
       }
       // Si hay al menos dos filas, renderizar como tabla
       if (tablaLines.length >= 2) {
-        // ... (lógica de la tabla sin cambios) ...
-        const tablaData = tablaLines.map(row =>
-          row
-            .split('|')
-            .map(cell => cell.trim().replace(/-+/g, '').replace(/\*\*/g, '').trim()) 
-            .filter(cell => cell.length > 0)
-        );
+        // Filtrar filas que solo contienen ':' o están vacías
+        let tablaData = tablaLines
+          .map(row =>
+            row
+              .split('|')
+              .map(cell => cell.trim().replace(/-+/g, '').replace(/\*\*/g, '').trim())
+          )
+          .filter(cols =>
+            // Si todas las celdas son ':' o están vacías, no incluir la fila
+            cols.some(cell => cell !== ':' && cell !== '' && cell !== null)
+          );
 
+        // Asegurar que todas las filas tengan el mismo número de columnas que el encabezado
+        if (tablaData.length > 0) {
+          const numCols = tablaData[0].length;
+          tablaData = tablaData.map(cols => {
+            if (cols.length < numCols) {
+              return [...cols, ...Array(numCols - cols.length).fill('')];
+            }
+            return cols;
+          });
+        }
         // --- Renderizado de Tabla (Sin cambios) ---
         elements.push(
           <div key={`table-card-${i}`} className="bot-table-card">

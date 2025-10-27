@@ -4,7 +4,7 @@
 import axios from "axios";
 
 // Configuración base de la API
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:9000").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://192.168.0.32:9000").replace(/\/$/, "");
 
 // Instancia Axios para endpoints tradicionales
 const api = axios.create({
@@ -34,6 +34,8 @@ export async function sendMessageToBackend(message, filename = null, tool = null
   if (filename) body.filename = filename;
   if (tool) body.tool = tool;
   if (session_id) body.session_id = session_id;
+  // Log para depuración
+  console.log('[sendMessageToBackend] Enviando:', { message, filename, tool, session_id });
 
   const response = await fetch(`${API_BASE}/chat`, {
     method: 'POST',
@@ -94,6 +96,8 @@ export async function uploadSessionFileToBackend(file, tool = null) {
   if (tool) {
     formData.append('tool', tool);
   }
+  // Log para depuración
+  console.log('[uploadSessionFileToBackend] Subiendo archivo:', { fileName: file?.name, session_id: window.lastSessionId, tool });
   try {
     // Usar fetch para poder leer texto plano fácilmente
     const response = await fetch(`${API_BASE}/session/upload`, {
