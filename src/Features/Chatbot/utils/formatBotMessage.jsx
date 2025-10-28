@@ -141,11 +141,17 @@ export function formatBotMessage(text) {
       if (tablaLines.length >= 2) {
         // Filtrar filas que solo contienen ':' o están vacías
         let tablaData = tablaLines
-          .map(row =>
-            row
-              .split('|')
-              .map(cell => cell.trim().replace(/-+/g, '').replace(/\*\*/g, '').trim())
-          )
+            .map(row =>
+              row
+                .split('|')
+                // Eliminar solo los guiones de separación, pero NO el signo menos de números
+                .map(cell => {
+                  let cleaned = cell.trim().replace(/\*\*/g, '').trim();
+                  // Si la celda es solo guiones (separador), eliminar todos los guiones
+                  if (/^-+$/.test(cleaned)) return '';
+                  return cleaned;
+                })
+            )
           .filter(cols =>
             // Si todas las celdas son ':' o están vacías, no incluir la fila
             cols.some(cell => cell !== ':' && cell !== '' && cell !== null)
