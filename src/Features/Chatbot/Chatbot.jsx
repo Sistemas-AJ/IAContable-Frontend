@@ -21,36 +21,85 @@ const Chatbot = () => {
     setClearFiles
   } = useChatMessages();
 
-  // Enviar mensaje al backend
+  // --- INICIO DE FUNCIONES FALTANTES ---
+
+  // --- handleSend (MODIFICADO PARA STREAMING) ---
   const handleSend = async () => {
-    if (input.trim() === '' || isLoading) return;
+    // Prueba de depuración:
+    console.log("Chatbot.jsx: handleSend iniciado con input:", JSON.stringify(input)); // DEBUG
+
+    if (input.trim() === '' || isLoading) {
+      console.log("Chatbot.jsx: handleSend bloqueado. Input vacío o isLoading es true."); // DEBUG
+      return;
+    }
+    
     const userMessage = { text: input, isUser: true, id: Date.now() };
     addMessage(userMessage);
     setInput('');
     setIsLoading(true);
+
     try {
-      // Detectar si la pregunta es de análisis financiero y hay archivo subido
       const filename = window.lastUploadedFile || null;
       const tool = selectedTool || null;
       const isFinancialAnalysis = /ratio|an[aá]lisis|liquidez|financier[ao]/i.test(input) && filename;
+
       if (isFinancialAnalysis) {
-        // Leer el archivo subido (Excel) y enviarlo al backend para análisis
-        // Aquí deberías obtener los datos del archivo, pero como frontend no puede leer Excel directamente,
-        // solo mandamos el nombre del archivo y el backend debe saber extraerlo.
+        console.log("Chatbot.jsx: Detectado análisis financiero."); // DEBUG
+        // El análisis financiero NO es un stream, usa el método antiguo
         const data = { filename };
         const result = await analyzeFinancialData(data);
         const botMessage = { text: result.data ? JSON.stringify(result.data, null, 2) : result.message, isUser: false, id: Date.now() + 1 };
         addMessage(botMessage);
+        setIsLoading(false); // Termina aquí
       } else {
-        const data = await sendMessageToBackend(userMessage.text, filename, tool);
-        const botMessage = { text: data.response, isUser: false, id: Date.now() + 1 };
+        // --- LÓGICA DE STREAMING ---
+        console.log("Chatbot.jsx: Iniciando lógica de streaming."); // DEBUG
+
+        // 1. Crea un mensaje de bot vacío
+        const botMessageId = Date.now() + 1;
+        const botMessage = { text: '', isUser: false, id: botMessageId };
         addMessage(botMessage);
+
+        // 2. Llama al servicio de streaming con callbacks
+        await sendMessageToBackend(
+          userMessage.text,
+          filename,
+          tool,
+          // onMessage: Se llama cada vez que llega un pedazo de texto
+          (chunk) => {
+            console.log("Chatbot.jsx (onMessage): Recibido chunk:", JSON.stringify(chunk)); // DEBUG
+            setMessages(prev =>
+              prev.map(msg =>
+                msg.id === botMessageId
+                  ? { ...msg, text: msg.text + chunk } // Añade el chunk al texto existente
+                  : msg
+              )
+            );
+          },
+          // onError: Se llama si el stream devuelve un error
+          (errorText) => {
+            console.error("Chatbot.jsx (onError): Error de stream reportado:", errorText); // DEBUG
+            setMessages(prev =>
+              prev.map(msg =>
+                msg.id === botMessageId
+                  ? { ...msg, text: `Lo siento, hubo un error: ${errorText}` }
+                  : msg
+              )
+            );
+          },
+          // onEnd: Se llama cuando el stream finaliza (evento 'end')
+          () => {
+            console.log("Chatbot.jsx (onEnd): Stream finalizado."); // DEBUG
+            setIsLoading(false); // Detiene el indicador de carga
+            setSelectedTool(null); // Limpia la herramienta si se usó
+          }
+        );
       }
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+      // Este es un error fatal (ej. fallo de red antes de conectar)
+      console.error("Chatbot.jsx (catch): Error fatal en handleSend:", error); // DEBUG
       const errorMessage = { text: 'Lo siento, hubo un error al procesar tu mensaje.', isUser: false, id: Date.now() + 1 };
       addMessage(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -112,19 +161,18 @@ const Chatbot = () => {
 
         // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con contexto
         if (selectedTool && text && text.trim() !== '') {
-          setIsLoading(true);
-          try {
-            // Enviar mensaje con filename y tool explícitos
-            const response = await sendMessageToBackend(text.trim(), data.filename, selectedTool);
-            const botMessage = { text: response.response, isUser: false, id: Date.now() + 4 };
-            addMessage(botMessage);
-            setSelectedTool(null);
-          } catch (error) {
-            console.error('Error al procesar la pregunta:', error);
-            const errorMessage = { text: 'Lo siento, hubo un error al procesar tu solicitud.', isUser: false, id: Date.now() + 4 };
-            addMessage(errorMessage);
-          } finally {
-            setIsLoading(false);
+          // Pre-populamos el input y llamamos a handleSend
+          // (que ahora soporta streaming)
+          setInput(text); // Pon el texto en el input
+          // Usamos un pequeño timeout para que React actualice el estado de 'input'
+          // antes de llamar a handleSend
+          setTimeout(() => {
+            handleSend(); 
+          }, 0);
+          
+          // Limpiamos el input visualmente
+          if (clearFilesRef.current) {
+            clearFilesRef.current(); 
           }
         }
 
@@ -137,15 +185,15 @@ const Chatbot = () => {
         ));
       } finally {
         setIsLoading(false);
-        if (clearFilesRef.current) {
+        // Solo limpiamos si no había texto para enviar
+        if ((!text || text.trim() === '') && clearFilesRef.current) {
           clearFilesRef.current();
         }
       }
     }
-    if (text && text.trim() !== '') {
-      await handleSend();
-    }
   };
+
+  // --- FIN DE FUNCIONES FALTANTES ---
 
   return (
     <div className="chat-container">
