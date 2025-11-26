@@ -113,7 +113,7 @@ export async function uploadFileToBackend(file, tool) {
   }
 
   try {
-    const { data: res } = await api.post('/upload', formData);
+    const { data: res } = await api.post('/session/upload', formData);
     return res;
   } catch {
     throw new Error('Error al subir el archivo');
