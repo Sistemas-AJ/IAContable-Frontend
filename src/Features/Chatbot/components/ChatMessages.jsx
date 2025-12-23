@@ -12,7 +12,10 @@ const ChatMessages = ({ messages, isLoading }) => (
           msg.text.includes('Estado de Resultados')
         );
       return (
-        <div key={msg.id || msg.text} className={`message ${msg.isUser ? 'user' : 'bot'} ${msg.isLoading ? 'loading' : ''}`}>
+        <div
+          key={msg.id || msg.text}
+          className={`message ${msg.isUser ? 'user' : 'bot'} ${msg.isLoading ? 'loading' : ''} ${isFinancialAnalysis ? 'analysis' : ''}`}
+        >
           {msg.isLoading ? (
             <div className="loading-indicator">
               <div className="loading-dots">
@@ -20,30 +23,14 @@ const ChatMessages = ({ messages, isLoading }) => (
                 <span></span>
                 <span></span>
               </div>
-              {msg.text}
+              {msg.text || 'Pensando...'}
             </div>
           ) : (
-            msg.isUser
-              ? <div className="user-message">{msg.text}</div>
-              : isFinancialAnalysis
-                ? <div className="chatbot-analysis bot-message">{formatBotMessage(msg.text, true)}</div>
-                : <div className="bot-message">{formatBotMessage(msg.text)}</div>
+            formatBotMessage(msg.text, isFinancialAnalysis)
           )}
         </div>
       );
     })}
-    {isLoading && (
-      <div className="message bot loading">
-        <div className="loading-indicator">
-          <div className="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          Pensando...
-        </div>
-      </div>
-    )}
   </div>
 );
 

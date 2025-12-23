@@ -7,13 +7,13 @@
  */
 
 :root {
-    --sidebar-text-color: #cdd5e3;
-    --sidebar-text-hover-color: #f8fafc;
+    --sidebar-text-color: #0f172a;
+    --sidebar-text-hover-color: #0f172a;
     --sidebar-active-text-color: #0f172a;
-    --sidebar-hover-bg: #2f3745;
-    --sidebar-active-bg: linear-gradient(90deg, #7cd3ff 0%, #7af0c1 100%);
-    --border-color: #243040;
-    --shadow-color: rgba(0, 0, 0, 0.25);
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.45);
+    --sidebar-active-bg: linear-gradient(120deg, rgba(124, 211, 255, 0.85) 0%, rgba(122, 240, 193, 0.85) 100%);
+    --border-color: rgba(255,255,255,0.45);
+    --shadow-color: rgba(15, 23, 42, 0.18);
 }
 
 .tools-dropdown {
@@ -28,18 +28,19 @@
   align-items: center;
   justify-content: flex-start; /* Alineado a la izquierda */
   width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 14px;
   color: var(--sidebar-text-color);
   height: 52px;
   font-size: 1.05rem;
-  font-weight: 600; /* Peso de fuente estándar para elementos no seleccionados */
+  font-weight: 700; /* Peso de fuente estándar para elementos no seleccionados */
   cursor: pointer;
   padding: 0 18px;
   transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
   gap: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(12px);
 }
 
 /* Efecto al pasar el mouse */
@@ -49,7 +50,7 @@
 }
 .tools-dropdown-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.2);
   border-color: rgba(255,255,255,0.12);
 }
 
@@ -62,7 +63,7 @@
   color: var(--sidebar-active-text-color);
   font-weight: 600;
   border-color: transparent;
-  box-shadow: 0 12px 30px rgba(0, 180, 255, 0.35);
+  box-shadow: 0 18px 40px rgba(0, 180, 255, 0.28);
 }
 
 .tools-dropdown-btn.active .tools-icon {
@@ -79,7 +80,7 @@
 }
 .tools-icon {
   font-size: 1.3rem;
-  color: #b8c2d4;
+  color: #0f172a;
   transition: color 0.2s ease;
 }
 
@@ -89,7 +90,7 @@
   top: calc(100% + 8px);
   left: 0;
   width: 100%;
-  background: #141a26;
+  background: rgba(255, 255, 255, 0.75);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 10px 30px var(--shadow-color);
@@ -98,6 +99,7 @@
   display: flex;
   flex-direction: column;
   animation: dropdown-fade-in 0.2s ease-out;
+  backdrop-filter: blur(14px);
 }
 
 @keyframes dropdown-fade-in {
@@ -107,9 +109,9 @@
 
 /* Los ítems dentro del menú */
 .tools-dropdown-item {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.5);
   border: 1px solid transparent;
-  color: #d8e2f1;
+  color: #0f172a;
   text-align: left;
   padding: 10px 16px;
   font-size: 0.95rem;
@@ -123,8 +125,8 @@
 }
 
 .tools-dropdown-item:hover {
-  background: rgba(124, 211, 255, 0.1);
-  color: #7cf0d9;
+  background: rgba(124, 211, 255, 0.35);
+  color: #0f172a;
   border-color: rgba(124, 211, 255, 0.25);
   transform: translateX(6px);
 }
