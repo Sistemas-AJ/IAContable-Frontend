@@ -6,13 +6,16 @@ import { useChatMessages } from './hooks/useChatMessages';
 import { sendMessageToBackend, uploadFileToBackend, analyzeFinancialData } from '../../services/chatService';
 import ChatMessages from './components/ChatMessages';
 import { FiCheckCircle } from 'react-icons/fi';
+import { FiMenu, FiX } from 'react-icons/fi';
 
 const Chatbot = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [showSessionCheck, setShowSessionCheck] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
   const [selectedTool, setSelectedTool] = useState(null);
+  const [isClosingSidebar, setIsClosingSidebar] = useState(false);
   const handleRemoveTool = () => setSelectedTool(null);
 
   // Custom hook para mensajes y referencia de archivos
@@ -187,9 +190,45 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="chat-container">
-      <Sidebar onToolSelect={setSelectedTool} />
+    <div className={`chat-container ${showSidebar ? 'sidebar-open' : 'sidebar-closed'}`}>
+      {showSidebar && (
+        <>
+          <Sidebar
+            onToolSelect={setSelectedTool}
+            onClose={() => {
+              setIsClosingSidebar(true);
+              setTimeout(() => {
+                setShowSidebar(false);
+                setIsClosingSidebar(false);
+              }, 280);
+            }}
+            closing={isClosingSidebar}
+          />
+          <div
+            className="sidebar-overlay"
+            onClick={() => {
+              setIsClosingSidebar(true);
+              setTimeout(() => {
+                setShowSidebar(false);
+                setIsClosingSidebar(false);
+              }, 280);
+            }}
+            role="presentation"
+          />
+        </>
+      )}
       <main className="main-content">
+        {!showSidebar && (
+          <button
+            type="button"
+            className="sidebar-toggle"
+            onClick={() => setShowSidebar(true)}
+            aria-label="Abrir menú lateral"
+          >
+            <FiMenu />
+            <span>Menú</span>
+          </button>
+        )}
         {showSessionCheck && (
           <div className="session-check">
             <FiCheckCircle className="session-check__icon" />

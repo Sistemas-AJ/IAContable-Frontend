@@ -41,7 +41,7 @@ const ToolsDropdown = ({ onSelect }) => {
   return (
     <div className="tools-dropdown" ref={dropdownRef}>
       <button
-        className="tools-dropdown-btn"
+        className={`tools-dropdown-btn ${open ? 'active' : ''}`}
         onClick={() => setOpen((v) => !v)}
         type="button"
         title="Herramientas"

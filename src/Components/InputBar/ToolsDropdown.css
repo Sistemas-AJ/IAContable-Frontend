@@ -7,13 +7,13 @@
  */
 
 :root {
-    --sidebar-text-color: #5A6A85;
-    --sidebar-text-hover-color: #2A3B53;
-    --sidebar-active-text-color: #FFFFFF;
-    --sidebar-hover-bg: #F8F9FA;
-    --sidebar-active-bg: linear-gradient(90deg, #007BFF 0%, #0056b3 100%);
-    --border-color: #EAEFF7;
-    --shadow-color: rgba(42, 59, 83, 0.12);
+    --sidebar-text-color: #cdd5e3;
+    --sidebar-text-hover-color: #f8fafc;
+    --sidebar-active-text-color: #0f172a;
+    --sidebar-hover-bg: #2f3745;
+    --sidebar-active-bg: linear-gradient(90deg, #7cd3ff 0%, #7af0c1 100%);
+    --border-color: #243040;
+    --shadow-color: rgba(0, 0, 0, 0.25);
 }
 
 .tools-dropdown {
@@ -28,35 +28,18 @@
   align-items: center;
   justify-content: flex-start; /* Alineado a la izquierda */
   width: 100%;
-  background: transparent; /* Sin fondo en estado normal */
-  border: none;
-  border-radius: 10px; /* Bordes suaves */
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   color: var(--sidebar-text-color);
-  height: 48px;
-  font-size: 1rem;
-  font-weight: 500; /* Peso de fuente estándar para elementos no seleccionados */
-  cursor: pointer;
-  padding: 0 16px;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-  gap: 12px;
-}
-.tools-dropdown-btn {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  background: #E3E6EC;
-  border: 1.5px solid #C7CEDA;
-  border-radius: 12px;
-  color: #5A6A85;
-  height: 48px;
+  height: 52px;
   font-size: 1.05rem;
-  font-weight: 500;
+  font-weight: 600; /* Peso de fuente estándar para elementos no seleccionados */
   cursor: pointer;
   padding: 0 18px;
-  box-shadow: 0 1px 4px rgba(42,59,83,0.06);
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
   gap: 12px;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 /* Efecto al pasar el mouse */
@@ -65,10 +48,9 @@
   color: var(--sidebar-text-hover-color);
 }
 .tools-dropdown-btn:hover {
-  background: #D7DBE3;
-  color: #2A3B53;
-  border-color: #B6BCC9;
-  box-shadow: 0 2px 8px rgba(42,59,83,0.10);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  border-color: rgba(255,255,255,0.12);
 }
 
 /* --- ¡NUEVO! ---
@@ -79,14 +61,8 @@
   background: var(--sidebar-active-bg);
   color: var(--sidebar-active-text-color);
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
-}
-.tools-dropdown-btn.active {
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text-color);
-  font-weight: 700;
-  border-color: #007BFF;
-  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.25);
+  border-color: transparent;
+  box-shadow: 0 12px 30px rgba(0, 180, 255, 0.35);
 }
 
 .tools-dropdown-btn.active .tools-icon {
@@ -103,7 +79,7 @@
 }
 .tools-icon {
   font-size: 1.3rem;
-  color: #5A6A85;
+  color: #b8c2d4;
   transition: color 0.2s ease;
 }
 
@@ -113,7 +89,7 @@
   top: calc(100% + 8px);
   left: 0;
   width: 100%;
-  background: #fff;
+  background: #141a26;
   border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 10px 30px var(--shadow-color);
@@ -131,13 +107,13 @@
 
 /* Los ítems dentro del menú */
 .tools-dropdown-item {
-  background: none;
-  border: none;
-  color: #2A3B53;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  color: #d8e2f1;
   text-align: left;
   padding: 10px 16px;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   border-radius: 8px;
   transition: background-color 0.18s, color 0.18s, transform 0.18s;
@@ -147,9 +123,10 @@
 }
 
 .tools-dropdown-item:hover {
-  background-color: var(--sidebar-hover-bg);
-  color: #007BFF;
-  transform: translateX(4px);
+  background: rgba(124, 211, 255, 0.1);
+  color: #7cf0d9;
+  border-color: rgba(124, 211, 255, 0.25);
+  transform: translateX(6px);
 }
 
 .tools-dropdown-icon {
