@@ -5,10 +5,13 @@ import { useState } from 'react';
 import { useChatMessages } from './hooks/useChatMessages';
 import { sendMessageToBackend, uploadFileToBackend, analyzeFinancialData } from '../../services/chatService';
 import ChatMessages from './components/ChatMessages';
+import { FiCheckCircle } from 'react-icons/fi';
 
 const Chatbot = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState('');
+  const [showSessionCheck, setShowSessionCheck] = useState(false);
   const [selectedTool, setSelectedTool] = useState(null);
   const handleRemoveTool = () => setSelectedTool(null);
 
@@ -21,18 +24,10 @@ const Chatbot = () => {
     setClearFiles
   } = useChatMessages();
 
-  // --- INICIO DE FUNCIONES FALTANTES ---
-
-  // --- handleSend (MODIFICADO PARA STREAMING) ---
+  // --- handleSend (streaming) ---
   const handleSend = async () => {
-    // Prueba de depuración:
-    console.log("Chatbot.jsx: handleSend iniciado con input:", JSON.stringify(input)); // DEBUG
+    if (input.trim() === '' || isLoading) return;
 
-    if (input.trim() === '' || isLoading) {
-      console.log("Chatbot.jsx: handleSend bloqueado. Input vacío o isLoading es true."); // DEBUG
-      return;
-    }
-    
     const userMessage = { text: input, isUser: true, id: Date.now() };
     addMessage(userMessage);
     setInput('');
@@ -41,44 +36,31 @@ const Chatbot = () => {
     try {
       const filename = window.lastUploadedFile || null;
       const tool = selectedTool || null;
-      const isFinancialAnalysis = /ratio|an[aá]lisis|liquidez|financier[ao]/i.test(input) && filename;
+      const isFinancialAnalysis = /ratio|analisis|an\\u00e1lisis|liquidez|financiero|financiera/i.test(input) && filename;
 
       if (isFinancialAnalysis) {
-        console.log("Chatbot.jsx: Detectado análisis financiero."); // DEBUG
-        // El análisis financiero NO es un stream, usa el método antiguo
         const data = { filename };
-        const result = await analyzeFinancialData(data);
+        const result = await analyzeFinancialData(data, sessionId);
         const botMessage = { text: result.data ? JSON.stringify(result.data, null, 2) : result.message, isUser: false, id: Date.now() + 1 };
         addMessage(botMessage);
-        setIsLoading(false); // Termina aquí
+        setIsLoading(false);
       } else {
-        // --- LÓGICA DE STREAMING ---
-        console.log("Chatbot.jsx: Iniciando lógica de streaming."); // DEBUG
-
-        // 1. Crea un mensaje de bot vacío
+        // Streaming
         const botMessageId = Date.now() + 1;
         const botMessage = { text: '', isUser: false, id: botMessageId };
         addMessage(botMessage);
 
-        // 2. Llama al servicio de streaming con callbacks
         await sendMessageToBackend(
           userMessage.text,
+          sessionId,
           filename,
           tool,
-          // onMessage: Se llama cada vez que llega un pedazo de texto
+          // onMessage
           (chunk) => {
-            console.log("Chatbot.jsx (onMessage): Recibido chunk:", JSON.stringify(chunk)); // DEBUG
-            setMessages(prev =>
-              prev.map(msg =>
-                msg.id === botMessageId
-                  ? { ...msg, text: msg.text + chunk } // Añade el chunk al texto existente
-                  : msg
-              )
-            );
+            typewriterAppend(botMessageId, chunk);
           },
-          // onError: Se llama si el stream devuelve un error
+          // onError
           (errorText) => {
-            console.error("Chatbot.jsx (onError): Error de stream reportado:", errorText); // DEBUG
             setMessages(prev =>
               prev.map(msg =>
                 msg.id === botMessageId
@@ -87,26 +69,28 @@ const Chatbot = () => {
               )
             );
           },
-          // onEnd: Se llama cuando el stream finaliza (evento 'end')
+          // onEnd
           () => {
-            console.log("Chatbot.jsx (onEnd): Stream finalizado."); // DEBUG
-            setIsLoading(false); // Detiene el indicador de carga
-            setSelectedTool(null); // Limpia la herramienta si se usó
+            setIsLoading(false);
+            setSelectedTool(null);
+          },
+          // onSessionId
+          (newSessionId) => {
+            if (!sessionId) {
+              setSessionId(newSessionId);
+              setShowSessionCheck(true);
+              setTimeout(() => setShowSessionCheck(false), 2600);
+            } else if (sessionId !== newSessionId) {
+              setSessionId(newSessionId);
+            }
           }
         );
       }
     } catch (error) {
-      // Este es un error fatal (ej. fallo de red antes de conectar)
-      console.error("Chatbot.jsx (catch): Error fatal en handleSend:", error); // DEBUG
       const errorMessage = { text: 'Lo siento, hubo un error al procesar tu mensaje.', isUser: false, id: Date.now() + 1 };
       addMessage(errorMessage);
       setIsLoading(false);
     }
-  };
-
-  // Ya no subimos archivos automáticamente al seleccionar
-  const handleFileChange = (e) => {
-    // Solo actualiza el input, no sube archivos
   };
 
   // Subir archivos solo cuando se presiona enviar
@@ -117,7 +101,7 @@ const Chatbot = () => {
         text: `Archivo subido: ${file.name}`,
         isUser: true,
         id: Date.now(),
-        file: file
+        file
       };
       addMessage(fileMessage);
 
@@ -131,25 +115,22 @@ const Chatbot = () => {
       setIsLoading(true);
 
       try {
-        // Enviar archivo y herramienta seleccionada como metadata
-        const data = await uploadFileToBackend(file, selectedTool);
+        const data = await uploadFileToBackend(file, selectedTool, sessionId);
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMessage.id
             ? {
                 ...msg,
                 text:
                   selectedTool
-                    ? `✅ Archivo "${data.filename}" procesado exitosamente. El archivo será evaluado para análisis de ${selectedTool.toLowerCase()}.`
-                    : `✅ Archivo "${data.filename}" procesado exitosamente. Ahora puedes preguntarme sobre su contenido.`,
+                    ? `✔ Archivo "${data.filename}" procesado exitosamente. El archivo será evaluado para análisis de ${selectedTool.toLowerCase()}.`
+                    : `✔ Archivo "${data.filename}" procesado exitosamente. Ahora puedes preguntarme sobre su contenido.`,
                 isLoading: false
               }
             : msg
         ));
 
-        // Guardar el nombre del archivo subido en el estado para usarlo en preguntas posteriores
         window.lastUploadedFile = data.filename;
 
-        // Si hay herramienta seleccionada y NO hay pregunta, preguntar al usuario qué desea hacer
         if (selectedTool && (!text || text.trim() === '')) {
           const askMessage = {
             text: `¿Qué deseas hacer con el archivo "${data.filename}" usando la herramienta "${selectedTool}"?`,
@@ -159,33 +140,25 @@ const Chatbot = () => {
           addMessage(askMessage);
         }
 
-        // Si hay herramienta seleccionada y SÍ hay pregunta, enviar la pregunta al backend con contexto
         if (selectedTool && text && text.trim() !== '') {
-          // Pre-populamos el input y llamamos a handleSend
-          // (que ahora soporta streaming)
-          setInput(text); // Pon el texto en el input
-          // Usamos un pequeño timeout para que React actualice el estado de 'input'
-          // antes de llamar a handleSend
+          setInput(text);
           setTimeout(() => {
-            handleSend(); 
+            handleSend();
           }, 0);
-          
-          // Limpiamos el input visualmente
+
           if (clearFilesRef.current) {
-            clearFilesRef.current(); 
+            clearFilesRef.current();
           }
         }
 
       } catch (error) {
-        console.error('Error al subir archivo:', error);
-        setMessages(prev => prev.map( msg =>
+        setMessages(prev => prev.map(msg =>
           msg.id === loadingMessage.id
-            ? { ...msg, text: '❌ Error al procesar el archivo. Inténtalo de nuevo.', isLoading: false }
+            ? { ...msg, text: 'Error al procesar el archivo. Inténtalo de nuevo.', isLoading: false }
             : msg
         ));
       } finally {
         setIsLoading(false);
-        // Solo limpiamos si no había texto para enviar
         if ((!text || text.trim() === '') && clearFilesRef.current) {
           clearFilesRef.current();
         }
@@ -193,12 +166,36 @@ const Chatbot = () => {
     }
   };
 
-  // --- FIN DE FUNCIONES FALTANTES ---
+  // Helpers
+  const typewriterAppend = (botMessageId, chunk) => {
+    const chars = chunk.split('');
+    let index = 0;
+    const interval = setInterval(() => {
+      const char = chars[index];
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === botMessageId
+            ? { ...msg, text: msg.text + char }
+            : msg
+        )
+      );
+      index += 1;
+      if (index >= chars.length) {
+        clearInterval(interval);
+      }
+    }, 10);
+  };
 
   return (
     <div className="chat-container">
       <Sidebar onToolSelect={setSelectedTool} />
       <main className="main-content">
+        {showSessionCheck && (
+          <div className="session-check">
+            <FiCheckCircle className="session-check__icon" />
+            <span>Conexión establecida</span>
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="welcome-message">
             <h1>Hola,</h1>
@@ -211,7 +208,7 @@ const Chatbot = () => {
           value={input}
           onChange={e => setInput(e.target.value)}
           onSend={handleSend}
-          onFileChange={handleFileChange}
+          onFileChange={() => {}}
           onSendFiles={handleSendFiles}
           onClearFiles={setClearFiles}
           disabled={isLoading}

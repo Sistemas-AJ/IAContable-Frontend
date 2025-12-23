@@ -11,7 +11,7 @@ export default defineConfig({
       // Vite la redirige a http://backend:9009
       // 'backend' es el nombre del servicio en Docker Compose.
       '/api': {
-        target: 'http://localhost:9009',
+        target: 'http://backend:9009',
         changeOrigin: true,
         secure: false, // Puedes omitir esto si no tienes HTTPS local
         rewrite: (path) => path.replace(/^\/api/, '') // Opcional: si la API no espera '/api'

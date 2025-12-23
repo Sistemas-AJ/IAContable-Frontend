@@ -98,6 +98,7 @@
     padding: 2rem;
     height: 100%;
     box-sizing: border-box;
+    position: relative;
 }
 
 .welcome-message {
@@ -207,6 +208,35 @@
     border-radius: 0 !important;
     box-shadow: none !important;
     position: relative;
+}
+
+.session-check {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #e6f7ed;
+    color: #0f5132;
+    border: 1px solid #b7e4c7;
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    font-weight: 600;
+    animation: session-check-fade 2.4s ease forwards;
+}
+
+.session-check__icon {
+    color: #2fb344;
+    font-size: 1.1rem;
+}
+
+@keyframes session-check-fade {
+    0% { opacity: 0; transform: translateY(-6px); }
+    15% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-6px); }
 }
 
 /* ...existing code... */
